@@ -1,0 +1,55 @@
+/* Virtual Piano Styles */
+.piano-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+  flex-wrap: wrap;
+}
+
+.piano-key {
+  width: 60px; /* Mobile friendly */
+  height: 200px;
+  border: 4px solid white;
+  border-radius: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 20px;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.key-label {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: white;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+}
+
+.key-sub {
+  font-size: 1rem;
+  color: rgba(255,255,255,0.8);
+}
+
+.coin-display {
+  background: white;
+  padding: 0.5rem 1.5rem;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 1.2rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  color: #F7B731;
+  border: 2px solid #F7B731;
+}
+
+@media (min-width: 768px) {
+  .piano-key {
+    width: 80px;
+    height: 250px;
+  }
+}
