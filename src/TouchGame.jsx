@@ -188,8 +188,9 @@ function TouchGame({ onBack }) {
         if (Tone.context.state !== 'running') await Tone.start();
 
         // Prevent double click
-        if (demoNote) return;
+        if (gameStatus === 'DEMO') return;
 
+        setGameStatus('DEMO'); // Lock status to prevent hints
         const now = Tone.now();
         const sequence = gameSequence.current;
 
@@ -207,6 +208,7 @@ function TouchGame({ onBack }) {
         // Reset after done
         setTimeout(() => {
             setDemoNote(null);
+            setGameStatus('PLAYING'); // Unlock
         }, sequence.length * 500 + 500);
     };
 
@@ -254,8 +256,8 @@ function TouchGame({ onBack }) {
                         <div className="progress-fill" style={{ width: `${progressPercent}%` }}></div>
                     </div>
                 </div>
-                <button className="btn-demo" disabled={!!demoNote} onClick={playDemo}>
-                    {demoNote ? '▶ Đang chạy...' : '▶ Nghe Mẫu'}
+                <button className="btn-demo" disabled={gameStatus === 'DEMO'} onClick={playDemo}>
+                    {gameStatus === 'DEMO' ? '▶ Đang chạy...' : '▶ Nghe Mẫu'}
                 </button>
             </div>
 
@@ -263,8 +265,8 @@ function TouchGame({ onBack }) {
                 {gameStatus === 'WIN' ? (
                     <button className="btn-challenge" onClick={() => { setStepIndex(0); setGameStatus('PLAYING'); setShowConfetti(false); }}>Chơi Lại 🔄</button>
                 ) : (
-                    <div className="next-note-bubble" style={{ borderColor: demoNote ? '#FFEB3B' : '#4D96FF' }}>
-                        {demoNote ? (
+                    <div className="next-note-bubble" style={{ borderColor: gameStatus === 'DEMO' ? '#FFEB3B' : '#4D96FF' }}>
+                        {gameStatus === 'DEMO' ? (
                             <>
                                 Đang chạy mẫu...
                                 <div className="finger-hint">Chú ý nút nhé!</div>
@@ -286,13 +288,13 @@ function TouchGame({ onBack }) {
                         let isCurrent = false;
                         let isFuture = false;
 
-                        // LOGIC: If Demo Mode, Highlight Demo Note ONLY
-                        if (demoNote) {
-                            if (k.note === demoNote.note) {
+                        // LOGIC: DEMO MODE - Strict Check
+                        if (gameStatus === 'DEMO') {
+                            if (demoNote && k.note === demoNote.note) {
                                 isCurrent = true;
                                 fingerToDisplay = demoNote.finger;
                             }
-                            // FUTURE HINTS HIDDEN IN DEMO
+                            // Explicitly NO future hints in DEMO
                         }
                         // LOGIC: Playing Mode
                         else if (gameStatus === 'PLAYING') {
