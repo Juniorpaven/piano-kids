@@ -187,28 +187,27 @@ function TouchGame({ onBack }) {
     const playDemo = async () => {
         if (Tone.context.state !== 'running') await Tone.start();
 
-        // Prevent double click
         if (gameStatus === 'DEMO') return;
 
-        setGameStatus('DEMO'); // Lock status to prevent hints
+        setGameStatus('DEMO');
+        setDemoIndex(-1);
         const now = Tone.now();
         const sequence = gameSequence.current;
 
-        // Schedule Audio & Visuals
         sequence.forEach((item, i) => {
             // Audio
             synth.triggerAttackRelease(item.note, "8n", now + i * 0.5);
 
-            // Visual (using setTimeout for simplicity in React state sync)
+            // Visual: Update Index
             setTimeout(() => {
-                setDemoNote({ note: item.note, finger: item.finger });
+                setDemoIndex(i);
             }, i * 500);
         });
 
         // Reset after done
         setTimeout(() => {
-            setDemoNote(null);
-            setGameStatus('PLAYING'); // Unlock
+            setDemoIndex(-1);
+            setGameStatus('PLAYING');
         }, sequence.length * 500 + 500);
     };
 
@@ -245,6 +244,12 @@ function TouchGame({ onBack }) {
     return (
         <div className="touch-game-fullscreen">
             {showConfetti && <Confetti recycle={false} numberOfPieces={300} />}
+
+            <div className="portrait-warning">
+                <div className="rotate-icon">📱➡️</div>
+                <h2>Vui lòng xoay ngang điện thoại!</h2>
+                <p>Ứng dụng hoạt động tốt nhất ở chế độ ngang.</p>
+            </div>
 
             <div className="glass-panel">
                 <button className="btn-small" onClick={() => setView('SELECTION')}>🔙 Menu</button>
@@ -288,15 +293,24 @@ function TouchGame({ onBack }) {
                         let isCurrent = false;
                         let isFuture = false;
 
-                        // LOGIC: DEMO MODE - Strict Check
+                        // LOGIC: DEMO MODE (Use demoIndex)
                         if (gameStatus === 'DEMO') {
-                            if (demoNote && k.note === demoNote.note) {
+                            const target = gameSequence.current[demoIndex];
+                            // 1. Current Note
+                            if (target && k.note === target.note) {
                                 isCurrent = true;
-                                fingerToDisplay = demoNote.finger;
+                                fingerToDisplay = target.finger;
                             }
-                            // Explicitly NO future hints in DEMO
+                            // 2. Future Notes (Roadmap) - RESTORED
+                            else {
+                                const futureStep = gameSequence.current.slice(demoIndex + 1).find(item => item.note === k.note);
+                                if (futureStep) {
+                                    isFuture = true;
+                                    fingerToDisplay = futureStep.finger;
+                                }
+                            }
                         }
-                        // LOGIC: Playing Mode
+                        // LOGIC: PLAYING MODE (Use stepIndex)
                         else if (gameStatus === 'PLAYING') {
                             const target = gameSequence.current[stepIndex];
                             if (target && k.note === target.note) {
