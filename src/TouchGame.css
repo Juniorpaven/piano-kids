@@ -1,3 +1,145 @@
+/* Full Screen Piano Keys - No Body Gap */
+
+.piano-scroll-container {
+  display: flex;
+  justify-content: center;
+  /* Center if fits */
+  align-items: flex-end;
+  /* Align bottom */
+  width: 100%;
+  overflow-x: auto;
+  /* Enable Scroll */
+  background: transparent;
+  padding-bottom: 0;
+}
+
+.piano-keyboard.extended {
+  /* Use max-content to allow full width of 3 octaves */
+  width: max-content;
+  min-width: 100%;
+  height: 240px;
+  background: transparent;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  position: relative;
+  margin: 0 auto;
+}
+
+/* Base Key Style */
+.key {
+  position: absolute;
+  border-radius: 0 0 8px 8px;
+  /* Softer bottom edge */
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: transform 0.05s, background 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  top: 0;
+  /* Align to very top */
+}
+
+/* WHITE KEYS */
+.key.white {
+  width: 58px;
+  height: 240px;
+  background: white;
+  border: 1px solid #ccc;
+  border-top: none;
+  z-index: 1;
+  color: #444;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 20px;
+  font-weight: 700;
+  font-size: 1.2rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.key.white.active {
+  background: #f0f0f0;
+  height: 235px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  border-bottom: 5px solid #ddd;
+  transform: none;
+}
+
+/* BLACK KEYS */
+.key.black {
+  width: 38px;
+  height: 150px;
+  background: #111;
+  border: 1px solid #000;
+  border-bottom: 4px solid #000;
+  border-radius: 0 0 5px 5px;
+  z-index: 10;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(to right, #222 0%, #000 20%, #000 80%, #222 100%);
+}
+
+.key.black.active {
+  background: #222;
+  height: 145px;
+  border-bottom: 1px solid #000;
+}
+
+/* Green Dot with Fingering Number */
+.key .dot {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  background: #4CAF50;
+  border: 2px solid white;
+  border-radius: 50%;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  opacity: 0.6;
+  /* Future notes are dimmed */
+  transform: translateX(-50%) scale(0.9);
+}
+
+.key.black .dot {
+  bottom: 15px;
+  width: 24px;
+  height: 24px;
+  font-size: 1rem;
+}
+
+/* Current Active Note gets animation and full opacity */
+.key .dot.current {
+  opacity: 1;
+  background: #00E676;
+  /* Brighter Green */
+  box-shadow: 0 0 15px #00E676;
+  animation: bounceCurrent 0.6s infinite alternate;
+}
+
+@keyframes bounceCurrent {
+  from {
+    transform: translateX(-50%) scale(1);
+  }
+
+  to {
+    transform: translateX(-50%) scale(1.2);
+  }
+}
+
+/* Scrollbar hidden */
+.piano-scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
 /* Glass Panel for HUD */
 .glass-panel {
   background: rgba(255, 255, 255, 0.1);
@@ -73,148 +215,4 @@
     transform: scale(1);
     opacity: 1;
   }
-}
-
-/* Ensure piano is visible on dark bg */
-.piano-keyboard.extended {
-  background: transparent;
-}
-
-
-/* Full Screen Piano Keys - No Body Gap */
-
-.piano-scroll-container {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  /* Align bottom */
-  width: 100%;
-  overflow-x: auto;
-  background: transparent;
-  /* No black background behind */
-}
-
-.piano-keyboard.extended {
-  /* Auto width based on keys content or fixed large width */
-  width: 1000px;
-  height: 240px;
-  background: transparent;
-  /* Remove piano body color */
-  padding: 0;
-  /* Remove felt padding */
-  border: none;
-  box-shadow: none;
-  border-radius: 0;
-  position: relative;
-  margin: 0 auto;
-}
-
-/* Base Key Style */
-.key {
-  position: absolute;
-  border-radius: 0 0 8px 8px;
-  /* Softer bottom edge */
-  box-sizing: border-box;
-  cursor: pointer;
-  transition: transform 0.05s, background 0.1s;
-  -webkit-tap-highlight-color: transparent;
-  top: 0;
-  /* Align to very top */
-}
-
-/* WHITE KEYS */
-.key.white {
-  width: 58px;
-  height: 240px;
-  /* Full height */
-  background: white;
-  /* Clean white */
-  border: 1px solid #ccc;
-  border-top: none;
-  /* Seamless top */
-  z-index: 1;
-  color: #444;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 20px;
-  font-weight: 700;
-  font-size: 1.2rem;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.key.white.active {
-  background: #f0f0f0;
-  height: 235px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  border-bottom: 5px solid #ddd;
-  /* Visual press depth */
-  transform: none;
-  /* Avoid shifting up, just shrink height from bottom? No, transform is better for perf */
-}
-
-/* BLACK KEYS */
-.key.black {
-  width: 38px;
-  /* Slightly wider */
-  height: 150px;
-  background: #111;
-  border: 1px solid #000;
-  border-bottom: 4px solid #000;
-  border-radius: 0 0 5px 5px;
-  z-index: 10;
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
-  /* 3D Gradient */
-  background: linear-gradient(to right, #222 0%, #000 20%, #000 80%, #222 100%);
-}
-
-.key.black.active {
-  background: #222;
-  height: 145px;
-  border-bottom: 1px solid #000;
-}
-
-/* Green Dot with Fingering Number */
-.key .dot {
-  position: absolute;
-  width: 30px;
-  /* Larger for number */
-  height: 30px;
-  background: #4CAF50;
-  border: 2px solid white;
-  border-radius: 50%;
-  bottom: 50px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 20;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 1.2rem;
-  animation: bounceIn 0.3s;
-}
-
-.key.black .dot {
-  bottom: 15px;
-  width: 24px;
-  height: 24px;
-  font-size: 1rem;
-}
-
-@keyframes bounceIn {
-  from {
-    transform: translateX(-50%) scale(0);
-  }
-
-  to {
-    transform: translateX(-50%) scale(1);
-  }
-}
-
-/* Remove scrollbar usually */
-.piano-scroll-container::-webkit-scrollbar {
-  display: none;
 }
