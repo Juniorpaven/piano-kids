@@ -228,6 +228,23 @@ function TouchGame({ onBack }) {
                         // Let's use a simpler "Render by Index" style or smart flex.
                         // But to match previous "Absolute" fix, we need precise Left props.
 
+                        // Auto finger mapping for Triads (Root, 3rd, 5th)
+                        // Right Hand: 1 - 3 - 5
+                        // Left Hand: 5 - 3 - 1
+                        let finger = null;
+                        if (isHint) {
+                            const hintIndex = selectedChord?.targetNotes.indexOf(k.note);
+                            if (handMode === 'RIGHT') {
+                                if (hintIndex === 0) finger = 1; // Root (Thumb)
+                                if (hintIndex === 1) finger = 3; // Middle
+                                if (hintIndex === 2) finger = 5; // Pinky
+                            } else {
+                                if (hintIndex === 0) finger = 5; // Root (Pinky)
+                                if (hintIndex === 1) finger = 3; // Middle
+                                if (hintIndex === 2) finger = 1; // Thumb
+                            }
+                        }
+
                         return (
                             <KeyComponent
                                 key={k.note}
@@ -235,6 +252,7 @@ function TouchGame({ onBack }) {
                                 index={index}
                                 isActive={isActive}
                                 isHint={isHint}
+                                finger={finger}
                                 onDown={handleNoteStart}
                                 onUp={handleNoteStop}
                                 allKeys={pianoKeys}
