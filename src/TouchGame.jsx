@@ -4,7 +4,7 @@ import Confetti from 'react-confetti';
 import './TouchGame.css';
 import './MainMenu.css';
 
-// --- DATA: SCALES & FINGERING ---
+// --- DATA: SCALES & FINGERING (Expanded for Demo) ---
 const SCALES = [
     {
         id: 'C_MAJOR', name: 'Đô Trưởng (C)', root: 'C', color: '#ef5350',
@@ -74,21 +74,23 @@ function TouchGame({ onBack }) {
     const [handMode, setHandMode] = useState('RIGHT');
     const [currentScale, setCurrentScale] = useState(null);
     const [stepIndex, setStepIndex] = useState(0);
-    const [gameStatus, setGameStatus] = useState('PLAYING'); // PLAYING, WIN
+    const [gameStatus, setGameStatus] = useState('PLAYING'); // PLAYING, WIN, DEMO
     const [showConfetti, setShowConfetti] = useState(false);
+
+    // New State for Demo Visuals
+    const [demoNote, setDemoNote] = useState(null);
 
     const gameSequence = useRef([]);
 
+    // Generate EXTRA WIDE KEYS to fill all screens (C3 to C8)
     const pianoKeys = (() => {
         let keys = [];
-        // Generate wide range: Octave 3, 4, 5, 6
-        const octaves = [3, 4, 5, 6];
+        const octaves = [3, 4, 5, 6, 7]; // 5 Octaves!
         octaves.forEach(oct => {
             NOTES_CHROMATIC.forEach(n => {
                 const type = n.includes('#') ? 'black' : 'white';
                 let label = n;
                 if (type === 'white') {
-                    // Map English to Vietnamese solfege if desired, or keep simple
                     if (n === 'C') label = 'Đô';
                     if (n === 'D') label = 'Rê';
                     if (n === 'E') label = 'Mi';
@@ -100,8 +102,8 @@ function TouchGame({ onBack }) {
                 keys.push({ note: `${n}${oct}`, label: type === 'white' ? label : null, type });
             });
         });
-        // Add one high C7 to finish the last octave nicely? Or just stop at B6.
-        keys.push({ note: 'C7', type: 'white', label: 'Đô' });
+        // Top C8
+        keys.push({ note: 'C8', type: 'white', label: 'Đô' });
         return keys;
     })();
 
@@ -139,10 +141,14 @@ function TouchGame({ onBack }) {
             gameSequence.current = getGameSequence();
             setStepIndex(0);
             setGameStatus('PLAYING');
+            setDemoNote(null);
         }
     }, [currentScale, handMode]);
 
     const handleNotePlay = async (playedNote) => {
+        // Ignore input during demo
+        if (demoNote) return;
+
         if (Tone.context.state !== 'running') await Tone.start();
         if (synth) synth.triggerAttackRelease(playedNote, "8n");
 
@@ -176,12 +182,31 @@ function TouchGame({ onBack }) {
         localStorage.setItem('pk_coins', newTotal.toString());
     };
 
+    // NEW: Play Demo with Visuals
     const playDemo = async () => {
         if (Tone.context.state !== 'running') await Tone.start();
+
+        // Prevent double click
+        if (demoNote) return;
+
         const now = Tone.now();
-        gameSequence.current.forEach((item, i) => {
-            synth.triggerAttackRelease(item.note, "8n", now + i * 0.4);
+        const sequence = gameSequence.current;
+
+        // Schedule Audio & Visuals
+        sequence.forEach((item, i) => {
+            // Audio
+            synth.triggerAttackRelease(item.note, "8n", now + i * 0.5);
+
+            // Visual (using setTimeout for simplicity in React state sync)
+            setTimeout(() => {
+                setDemoNote({ note: item.note, finger: item.finger });
+            }, i * 500);
         });
+
+        // Reset after done
+        setTimeout(() => {
+            setDemoNote(null);
+        }, sequence.length * 500 + 500);
     };
 
     if (view === 'SELECTION') {
@@ -228,17 +253,28 @@ function TouchGame({ onBack }) {
                         <div className="progress-fill" style={{ width: `${progressPercent}%` }}></div>
                     </div>
                 </div>
-                <button className="btn-demo" onClick={playDemo}>▶ Mẫu</button>
+                <button className="btn-demo" disabled={!!demoNote} onClick={playDemo}>
+                    {demoNote ? '▶ Đang chạy...' : '▶ Nghe Mẫu'}
+                </button>
             </div>
 
             <div className="prompt-area">
-                {gameStatus !== 'WIN' ? (
-                    <div className="next-note-bubble">
-                        Tiếp theo: <span style={{ color: '#4CAF50', fontSize: '1.5rem' }}>{currentTarget.note?.replace(/[0-9]/, '')}</span>
-                        <div className="finger-hint">Ngón số: <strong>{currentTarget.finger}</strong></div>
-                    </div>
-                ) : (
+                {gameStatus === 'WIN' ? (
                     <button className="btn-challenge" onClick={() => { setStepIndex(0); setGameStatus('PLAYING'); setShowConfetti(false); }}>Chơi Lại 🔄</button>
+                ) : (
+                    <div className="next-note-bubble" style={{ borderColor: demoNote ? '#FFEB3B' : '#4D96FF' }}>
+                        {demoNote ? (
+                            <>
+                                Đang chạy mẫu...
+                                <div className="finger-hint">Chú ý nút nhé!</div>
+                            </>
+                        ) : (
+                            <>
+                                Tiếp theo: <span style={{ color: '#4CAF50', fontSize: '1.5rem' }}>{currentTarget.note?.replace(/[0-9]/, '')}</span>
+                                <div className="finger-hint">Ngón số: <strong>{currentTarget.finger}</strong></div>
+                            </>
+                        )}
+                    </div>
                 )}
             </div>
 
@@ -247,19 +283,23 @@ function TouchGame({ onBack }) {
                     {pianoKeys.map((k, i) => {
                         let fingerToDisplay = null;
                         let isCurrent = false;
-                        let isFuture = false; // Roadmap hint
+                        let isFuture = false;
 
-                        if (gameStatus === 'PLAYING') {
+                        // LOGIC: If Demo Mode, Highlight Demo Note ONLY
+                        if (demoNote) {
+                            if (k.note === demoNote.note) {
+                                isCurrent = true;
+                                fingerToDisplay = demoNote.finger;
+                            }
+                        }
+                        // LOGIC: Playing Mode
+                        else if (gameStatus === 'PLAYING') {
                             const target = gameSequence.current[stepIndex];
-                            // 1. Is it the Current Goal?
                             if (target && k.note === target.note) {
                                 isCurrent = true;
                                 fingerToDisplay = target.finger;
                             }
-                            // 2. Is it a Future Goal in the sequence?
                             else {
-                                // Search from stepIndex+1 to end (slice returns new array)
-                                // Optimization: Only show roadmap for UPCOMING 7 notes (prevent visual clutter if scale repeats)
                                 const futureStep = gameSequence.current.slice(stepIndex + 1).find(item => item.note === k.note);
                                 if (futureStep) {
                                     isFuture = true;
@@ -292,19 +332,8 @@ const KeyComponent = ({ k, index, isCurrent, isFuture, finger, onPlay, allKeys }
     for (let i = 0; i < index; i++) {
         if (allKeys[i].type === 'white') whiteCount++;
     }
-    const WHITE_W = 60; // Match CSS width
-
-    // Position logic
-    let leftPos = 0;
-    if (k.type === 'white') {
-        leftPos = whiteCount * WHITE_W;
-    } else {
-        // Black key centered on line between white keys
-        // i.e. after whiteCount keys.
-        // position = whiteCount * 60 - (BlackWidth/2)
-        // BlackWidth is 40px in CSS
-        leftPos = (whiteCount * WHITE_W) - 20;
-    }
+    const WHITE_W = 60; // Match CSS
+    let leftPos = k.type === 'white' ? whiteCount * WHITE_W : (whiteCount * WHITE_W) - 20;
 
     const showDot = isCurrent || isFuture;
     const dotClass = isCurrent ? 'current' : '';
