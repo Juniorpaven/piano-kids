@@ -2,188 +2,195 @@ import React, { useState, useEffect, useRef } from 'react';
 import * as Tone from 'tone';
 import Confetti from 'react-confetti';
 import './TouchGame.css';
+import './MainMenu.css';
 
-// Full Chromatic Data for generation
-const NOTES_CHROMATIC = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-
-// All 7 Major Chords
-const CHORDS_FULL = [
-    { id: 'C_MAJOR', name: 'Đô Trưởng (C)', root: 'C', notes: ['C', 'E', 'G'], color: '#ef5350' },
-    { id: 'D_MAJOR', name: 'Rê Trưởng (D)', root: 'D', notes: ['D', 'F#', 'A'], color: '#FFB74D' },
-    { id: 'E_MAJOR', name: 'Mi Trưởng (E)', root: 'E', notes: ['E', 'G#', 'B'], color: '#FFEE58' },
-    { id: 'F_MAJOR', name: 'Pha Trưởng (F)', root: 'F', notes: ['F', 'A', 'C'], color: '#66BB6A' },
-    { id: 'G_MAJOR', name: 'Son Trưởng (G)', root: 'G', notes: ['G', 'B', 'D'], color: '#42A5F5' },
-    { id: 'A_MAJOR', name: 'La Trưởng (A)', root: 'A', notes: ['A', 'C#', 'E'], color: '#AB47BC' },
-    { id: 'B_MAJOR', name: 'Si Trưởng (B)', root: 'B', notes: ['B', 'D#', 'F#'], color: '#EC407A' },
+// --- DATA: SCALES & FINGERING ---
+const SCALES = [
+    {
+        id: 'C_MAJOR', name: 'Đô Trưởng (C)', root: 'C', color: '#ef5350',
+        notes: ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C'],
+        fingering: {
+            RIGHT: [1, 2, 3, 1, 2, 3, 4, 5],
+            LEFT: [5, 4, 3, 2, 1, 3, 2, 1]
+        }
+    },
+    {
+        id: 'D_MAJOR', name: 'Rê Trưởng (D)', root: 'D', color: '#FFB74D',
+        notes: ['D', 'E', 'F#', 'G', 'A', 'B', 'C#', 'D'],
+        fingering: {
+            RIGHT: [1, 2, 3, 1, 2, 3, 4, 5],
+            LEFT: [5, 4, 3, 2, 1, 3, 2, 1]
+        }
+    },
+    {
+        id: 'E_MAJOR', name: 'Mi Trưởng (E)', root: 'E', color: '#FFEE58',
+        notes: ['E', 'F#', 'G#', 'A', 'B', 'C#', 'D#', 'E'],
+        fingering: {
+            RIGHT: [1, 2, 3, 1, 2, 3, 4, 5],
+            LEFT: [5, 4, 3, 2, 1, 3, 2, 1]
+        }
+    },
+    {
+        id: 'F_MAJOR', name: 'Fa Trưởng (F)', root: 'F', color: '#66BB6A',
+        notes: ['F', 'G', 'A', 'A#', 'C', 'D', 'E', 'F'],
+        fingering: {
+            RIGHT: [1, 2, 3, 4, 1, 2, 3, 4],
+            LEFT: [5, 4, 3, 2, 1, 3, 2, 1]
+        }
+    },
+    {
+        id: 'G_MAJOR', name: 'Son Trưởng (G)', root: 'G', color: '#42A5F5',
+        notes: ['G', 'A', 'B', 'C', 'D', 'E', 'F#', 'G'],
+        fingering: {
+            RIGHT: [1, 2, 3, 1, 2, 3, 4, 5],
+            LEFT: [5, 4, 3, 2, 1, 3, 2, 1]
+        }
+    },
+    {
+        id: 'A_MAJOR', name: 'La Trưởng (A)', root: 'A', color: '#AB47BC',
+        notes: ['A', 'B', 'C#', 'D', 'E', 'F#', 'G#', 'A'],
+        fingering: {
+            RIGHT: [1, 2, 3, 1, 2, 3, 4, 5],
+            LEFT: [5, 4, 3, 2, 1, 3, 2, 1]
+        }
+    },
+    {
+        id: 'B_MAJOR', name: 'Si Trưởng (B)', root: 'B', color: '#EC407A',
+        notes: ['B', 'C#', 'D#', 'E', 'F#', 'G#', 'A#', 'B'],
+        fingering: {
+            RIGHT: [1, 2, 3, 1, 2, 3, 4, 5],
+            LEFT: [4, 3, 2, 1, 4, 3, 2, 1]
+        }
+    },
 ];
+
+const NOTES_CHROMATIC = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
 function TouchGame({ onBack }) {
     const [synth, setSynth] = useState(null);
     const [coins, setCoins] = useState(() => parseInt(localStorage.getItem('pk_coins') || '0'));
 
-    // Navigation State
-    const [view, setView] = useState('SELECTION'); // SELECTION, PLAY
-    const [handMode, setHandMode] = useState('RIGHT'); // RIGHT (Octave 4), LEFT (Octave 3)
-    const [selectedChord, setSelectedChord] = useState(null);
-
-    // Gameplay State
-    const [activeKeys, setActiveKeys] = useState(new Set());
+    const [view, setView] = useState('SELECTION');
+    const [handMode, setHandMode] = useState('RIGHT');
+    const [currentScale, setCurrentScale] = useState(null);
+    const [stepIndex, setStepIndex] = useState(0);
+    const [gameStatus, setGameStatus] = useState('PLAYING'); // PLAYING, WIN
     const [showConfetti, setShowConfetti] = useState(false);
-    const activeKeysRef = useRef(new Set());
 
-    // Generate Keys based on Hand Mode (Octave 3 or 4)
-    // We desire a range that covers the chord. C-Major is easy (C4-E4-G4). 
-    // But B-Major (B-D#-F#) crosses octave if we start at C.
-    // Ideally, display 1.5 Octaves or 14 keys starting from C. 
-    const startOctave = handMode === 'RIGHT' ? 4 : 3;
+    const gameSequence = useRef([]);
 
-    // Allow C to next E (approx 17 keys to cover most chords comfortably without horizontal scroll)
-    // Or just typical C to C (13 keys).
-    // Let's generate 14 key sequence (C to D next octave) to be safe for B major chords usually.
-    const generateKeys = (octave) => {
+    const pianoKeys = (() => {
         let keys = [];
-        // First Octave
-        NOTES_CHROMATIC.forEach(n => {
-            const type = n.includes('#') ? 'black' : 'white';
-            const name = type === 'white' ? n.replace(/[0-9]/g, '') : '';
-            // VN names
-            let vnName = name;
-            if (name === 'C') vnName = 'Đô';
-            if (name === 'D') vnName = 'Rê';
-            if (name === 'E') vnName = 'Mi';
-            if (name === 'F') vnName = 'Fa';
-            if (name === 'G') vnName = 'Sol';
-            if (name === 'A') vnName = 'La';
-            if (name === 'B') vnName = 'Si';
-
-            keys.push({ note: `${n}${octave}`, label: name, type, name: vnName });
+        const octaves = [3, 4, 5];
+        octaves.forEach(oct => {
+            NOTES_CHROMATIC.forEach(n => {
+                const type = n.includes('#') ? 'black' : 'white';
+                keys.push({ note: `${n}${oct}`, label: n, type });
+            });
         });
-        // Add High C, C#, D, D# (next octave) to handle crossover chords or just high notes
-        ['C', 'C#', 'D', 'D#', 'E'].forEach(n => {
-            const type = n.includes('#') ? 'black' : 'white';
-            keys.push({ note: `${n}${octave + 1}`, label: n, type, name: n.indexOf('#') < 0 ? n : '' });
-        });
+        keys.push({ note: 'C6', type: 'white', label: 'C' });
         return keys;
-    };
+    })();
 
-    const pianoKeys = generateKeys(startOctave);
-
-    // Initialize Audio
     useEffect(() => {
-        const newSynth = new Tone.PolySynth(Tone.Synth, {
+        const reliableSynth = new Tone.PolySynth(Tone.Synth, {
             oscillator: { type: 'triangle' },
-            envelope: { attack: 0.01, decay: 0.1, sustain: 0.3, release: 1 },
-            maxPolyphony: 6
+            envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 1 }
         }).toDestination();
-        setSynth(newSynth);
-        return () => newSynth.dispose();
+        setSynth(reliableSynth);
+        return () => reliableSynth.dispose();
     }, []);
 
-    // ---------------
-    // ACTIONS
-    // ---------------
-    const selectChord = (chord) => {
-        // Map generic chord notes to specific octave
-        // Example C Major: C, E, G -> C4, E4, G4.
-        // B Major: B, D#, F# -> B4, D#5, F#5.
-        // Logic: If note index < root index, it bumps to next octave? 
-        // Simplified: Just mapped to the keys we generated.
+    const getGameSequence = () => {
+        if (!currentScale) return [];
+        const baseOctave = handMode === 'RIGHT' ? 4 : 3;
+        const notes = currentScale.notes;
+        const fingers = currentScale.fingering[handMode];
+        let currentOctave = baseOctave;
+        let lastNoteIdx = -1;
 
-        const rootIndex = NOTES_CHROMATIC.indexOf(chord.root); // e.g. B is 11
-
-        const specificNotes = chord.notes.map(nName => {
-            // Detect if this note is "lower" in chromatic scale than root, implying next octave?
-            // Actually basic triad definition: Root, 3rd, 5th.
-            // Is D# higher than B? No, D# is index 3, B is index 11. So D# is in next octave.
-            const noteIndex = NOTES_CHROMATIC.indexOf(nName.replace('#', ''));
-            const octaveOffset = noteIndex < rootIndex ? 1 : 0;
-            return `${nName}${startOctave + octaveOffset}`;
+        const ascNotes = [];
+        notes.forEach((nName, i) => {
+            const nIdx = NOTES_CHROMATIC.indexOf(nName.includes('#') ? nName : nName.replace(/[0-9]/g, ''));
+            if (lastNoteIdx !== -1 && nIdx < lastNoteIdx) { currentOctave++; }
+            lastNoteIdx = nIdx;
+            ascNotes.push({ note: `${nName}${currentOctave}`, finger: fingers[i] });
         });
 
-        setSelectedChord({ ...chord, targetNotes: specificNotes });
-        setView('PLAY');
-        setShowConfetti(false);
+        const descNotes = [...ascNotes].slice(0, 7).reverse();
+        return [...ascNotes, ...descNotes];
     };
 
-    const playDemo = async () => {
-        if (!selectedChord || Tone.context.state !== 'running') await Tone.start();
-        const now = Tone.now();
-        selectedChord.targetNotes.forEach((note, i) => {
-            synth.triggerAttackRelease(note, "8n", now + i * 0.3);
-        });
-        synth.triggerAttackRelease(selectedChord.targetNotes, "2n", now + 1.2);
-    };
+    useEffect(() => {
+        if (currentScale) {
+            gameSequence.current = getGameSequence();
+            setStepIndex(0);
+            setGameStatus('PLAYING');
+        }
+    }, [currentScale, handMode]);
 
-    const checkChord = (currentKeys) => {
-        if (!selectedChord) return;
-        const allPressed = selectedChord.targetNotes.every(n => currentKeys.has(n));
-        if (allPressed && !showConfetti) {
-            setShowConfetti(true);
-            // Play Win Sound
-            if (synth) {
-                const now = Tone.now();
-                synth.triggerAttackRelease(selectedChord.targetNotes, "1n", now);
+    const handleNotePlay = async (playedNote) => {
+        if (Tone.context.state !== 'running') await Tone.start();
+        if (synth) synth.triggerAttackRelease(playedNote, "8n");
+
+        if (view === 'PLAY' && gameStatus === 'PLAYING') {
+            const target = gameSequence.current[stepIndex];
+            if (target && playedNote === target.note) {
+                if (stepIndex >= gameSequence.current.length - 1) {
+                    setGameStatus('WIN');
+                    setShowConfetti(true);
+                    updateCoins(5);
+                    setTimeout(() => playWinMelody(), 500);
+                } else {
+                    setStepIndex(prev => prev + 1);
+                }
             }
         }
     };
 
-    const handleNoteStart = async (note) => {
+    const playWinMelody = () => {
+        if (!synth) return;
+        const now = Tone.now();
+        synth.triggerAttackRelease("C5", "8n", now);
+        synth.triggerAttackRelease("E5", "8n", now + 0.1);
+        synth.triggerAttackRelease("G5", "8n", now + 0.2);
+        synth.triggerAttackRelease("C6", "2n", now + 0.3);
+    };
+
+    const updateCoins = (val) => {
+        const newTotal = coins + val;
+        setCoins(newTotal);
+        localStorage.setItem('pk_coins', newTotal.toString());
+    };
+
+    const playDemo = async () => {
         if (Tone.context.state !== 'running') await Tone.start();
-        if (synth) synth.triggerAttack(note);
-
-        const newSet = new Set(activeKeysRef.current);
-        newSet.add(note);
-        activeKeysRef.current = newSet;
-        setActiveKeys(new Set(newSet));
-        checkChord(newSet);
+        const now = Tone.now();
+        gameSequence.current.forEach((item, i) => {
+            synth.triggerAttackRelease(item.note, "8n", now + i * 0.4);
+        });
     };
 
-    const handleNoteStop = (note) => {
-        if (synth) synth.triggerRelease(note);
-        const newSet = new Set(activeKeysRef.current);
-        newSet.delete(note);
-        activeKeysRef.current = newSet;
-        setActiveKeys(new Set(newSet));
-    };
-
-    // ---------------
-    // RENDER
-    // ---------------
     if (view === 'SELECTION') {
         return (
-            <div className="app-container selection-screen" style={{ backgroundColor: '#E0F7FA', overflowY: 'auto' }}>
+            <div className="app-main-menu">
                 <div className="header-panel">
                     <button className="btn-small" onClick={onBack}>🏠</button>
-                    <h2>Chọn Bài Học</h2>
                     <div className="coin-display">🟡 {coins}</div>
                 </div>
 
-                {/* Hand Toggle */}
+                <h1 className="title-lg">Luyện Ngón Piano 🎹</h1>
+
                 <div className="hand-toggle">
-                    <button
-                        className={`hand-btn ${handMode === 'LEFT' ? 'active' : ''}`}
-                        onClick={() => setHandMode('LEFT')}
-                    >
-                        🤚 Tay Trái
-                    </button>
-                    <button
-                        className={`hand-btn ${handMode === 'RIGHT' ? 'active' : ''}`}
-                        onClick={() => setHandMode('RIGHT')}
-                    >
-                        ✋ Tay Phải
-                    </button>
+                    <button className={`hand-btn ${handMode === 'LEFT' ? 'active' : ''}`} onClick={() => setHandMode('LEFT')}>🤚 Tay Trái</button>
+                    <button className={`hand-btn ${handMode === 'RIGHT' ? 'active' : ''}`} onClick={() => setHandMode('RIGHT')}>✋ Tay Phải</button>
                 </div>
 
                 <div className="chord-grid">
-                    {CHORDS_FULL.map(chord => (
-                        <div
-                            key={chord.id}
-                            className="chord-card"
-                            style={{ borderColor: chord.color }}
-                            onClick={() => selectChord(chord)}
-                        >
-                            <div className="chord-title" style={{ background: chord.color }}>{chord.name}</div>
-                            <div className="chord-notes">{chord.notes.join(' - ')}</div>
+                    {SCALES.map(s => (
+                        <div key={s.id} className="chord-card" onClick={() => { setCurrentScale(s); setView('PLAY'); }}>
+                            <div className="chord-title" style={{ background: s.color }}>{s.name}</div>
+                            <div className="chord-notes">Luyện: {s.notes.join(' - ')}</div>
                         </div>
                     ))}
                 </div>
@@ -191,70 +198,72 @@ function TouchGame({ onBack }) {
         );
     }
 
-    return (
-        <div className="app-container game-screen" style={{ backgroundColor: '#EFFFEE' }}>
-            {showConfetti && <Confetti recycle={false} numberOfPieces={500} />}
+    const currentTarget = gameSequence.current[stepIndex] || {};
+    const progressPercent = Math.min(100, (stepIndex / gameSequence.current.length) * 100);
 
-            {/* Landscape Warning Overlay (CSS will handle visibility) */}
-            <div className="landscape-warning">
-                <h3>🔄 Xoay ngang điện thoại để chơi nhé!</h3>
+    return (
+        <div className="app-container" style={{ backgroundColor: '#222' }}>
+            {showConfetti && <Confetti recycle={false} numberOfPieces={300} />}
+
+            <div className="header-panel glass-panel">
+                <button className="btn-small" onClick={() => setView('SELECTION')}>🔙 Menu</button>
+                <div className="status-bar">
+                    <div style={{ color: 'white', fontWeight: 'bold', fontSize: '1.2rem' }}>
+                        {gameStatus === 'WIN' ? '🎉 HOÀN THÀNH XUẤT SẮC! +5 SAO' : `Bài: ${currentScale?.name} (${handMode === 'RIGHT' ? 'Tay Phải' : 'Tay Trái'})`}
+                    </div>
+                    <div className="progress-track">
+                        <div className="progress-fill" style={{ width: `${progressPercent}%` }}></div>
+                    </div>
+                </div>
+                <button className="btn-demo" onClick={playDemo}>▶ Mẫu</button>
             </div>
 
-            <div className="header-panel">
-                <button className="btn-small" onClick={() => setView('SELECTION')}>🔙 Chọn bài</button>
-                <div className="target-badge" style={{ background: selectedChord.color }}>
-                    {selectedChord.name} ({handMode === 'RIGHT' ? 'Phải' : 'Trái'})
-                </div>
-                <button className="btn-demo" onClick={playDemo}>▶ Nghe thử</button>
+            <div className="prompt-area">
+                {gameStatus !== 'WIN' ? (
+                    <div className="next-note-bubble">
+                        Tiếp theo: <span style={{ color: '#4CAF50', fontSize: '1.5rem' }}>{currentTarget.note?.replace(/[0-9]/, '')}</span>
+                        <div className="finger-hint">Ngón số: <strong>{currentTarget.finger}</strong></div>
+                    </div>
+                ) : (
+                    <button className="btn-challenge" onClick={() => { setStepIndex(0); setGameStatus('PLAYING'); setShowConfetti(false); }}>Chơi Lại 🔄</button>
+                )}
             </div>
 
             <div className="piano-scroll-container">
                 <div className="piano-keyboard extended">
-                    {pianoKeys.map((k, index) => {
-                        const isActive = activeKeys.has(k.note);
-                        const isHint = selectedChord?.targetNotes.includes(k.note);
+                    {pianoKeys.map((k, i) => {
+                        let fingerToDisplay = null;
+                        let isCurrent = false;
+                        let isFuture = false; // Roadmap hint
 
-                        // Calculate explicit CSS left position for perfect alignment
-                        // White key width ~60px.
-                        // We need to count how many white keys came strictly before this key
-                        // To place it correctly. 
-                        // This logic inside map is easier if we just pre-calced it, but dynamic is fine.
-
-                        // Simple Logic: 
-                        // If White: Position = (Count of Whites before) * WIDTH
-                        // If Black: Position = (Count of Whites before) * WIDTH - (WIDTH/2) + Adjustment?
-                        // Actually we can just rely on the 'left' style if we calculate it.
-
-                        // Let's use a simpler "Render by Index" style or smart flex.
-                        // But to match previous "Absolute" fix, we need precise Left props.
-
-                        // Auto finger mapping for Triads (Root, 3rd, 5th)
-                        // Right Hand: 1 - 3 - 5
-                        // Left Hand: 5 - 3 - 1
-                        let finger = null;
-                        if (isHint) {
-                            const hintIndex = selectedChord?.targetNotes.indexOf(k.note);
-                            if (handMode === 'RIGHT') {
-                                if (hintIndex === 0) finger = 1; // Root (Thumb)
-                                if (hintIndex === 1) finger = 3; // Middle
-                                if (hintIndex === 2) finger = 5; // Pinky
-                            } else {
-                                if (hintIndex === 0) finger = 5; // Root (Pinky)
-                                if (hintIndex === 1) finger = 3; // Middle
-                                if (hintIndex === 2) finger = 1; // Thumb
+                        if (gameStatus === 'PLAYING') {
+                            const target = gameSequence.current[stepIndex];
+                            // 1. Is it the Current Goal?
+                            if (target && k.note === target.note) {
+                                isCurrent = true;
+                                fingerToDisplay = target.finger;
+                            }
+                            // 2. Is it a Future Goal in the sequence?
+                            else {
+                                // Search from stepIndex+1 to end (slice returns new array)
+                                // Optimization: Only show roadmap for UPCOMING 7 notes (prevent visual clutter if scale repeats)
+                                const futureStep = gameSequence.current.slice(stepIndex + 1).find(item => item.note === k.note);
+                                if (futureStep) {
+                                    isFuture = true;
+                                    fingerToDisplay = futureStep.finger;
+                                }
                             }
                         }
 
                         return (
                             <KeyComponent
-                                key={k.note}
+                                key={`${k.note}-${i}`}
                                 k={k}
-                                index={index}
-                                isActive={isActive}
-                                isHint={isHint}
-                                finger={finger}
-                                onDown={handleNoteStart}
-                                onUp={handleNoteStop}
+                                index={i}
+                                isCurrent={isCurrent}
+                                isFuture={isFuture}
+                                finger={fingerToDisplay}
+                                onPlay={handleNotePlay}
                                 allKeys={pianoKeys}
                             />
                         );
@@ -265,40 +274,30 @@ function TouchGame({ onBack }) {
     );
 }
 
-// Helper Subcomponent to handle positioning logic cleaner
-const KeyComponent = ({ k, index, isActive, isHint, onDown, onUp, allKeys }) => {
-    // Calculate Left Position
-    // Count white keys before this one
+const KeyComponent = ({ k, index, isCurrent, isFuture, finger, onPlay, allKeys }) => {
     let whiteCount = 0;
     for (let i = 0; i < index; i++) {
         if (allKeys[i].type === 'white') whiteCount++;
     }
+    const WHITE_W = 58;
+    let leftPos = k.type === 'white' ? whiteCount * WHITE_W : (whiteCount * WHITE_W) - 19;
 
-    // Base unit
-    const WHITE_W = 60; // Slightly narrower to fit 17 keys
-
-    let leftPos = 0;
-    if (k.type === 'white') {
-        leftPos = whiteCount * WHITE_W;
-    } else {
-        // Black key sits between prev white and next white
-        // It shares the slot boundary.
-        // Left = (whiteCount * WHITE_W) - (BLACK_W / 2)
-        leftPos = (whiteCount * WHITE_W) - 18; // approx half of 36
-    }
+    const showDot = isCurrent || isFuture;
+    const dotClass = isCurrent ? 'current' : ''; // Future has default dim opacity from CSS
 
     return (
         <button
-            className={`key ${k.type} ${isActive ? 'active' : ''} ${isHint ? 'hint blob' : ''}`}
+            className={`key ${k.type} ${isCurrent ? 'active-hint' : ''}`}
             style={{ left: `${leftPos}px` }}
-            onMouseDown={() => onDown(k.note)}
-            onMouseUp={() => onUp(k.note)}
-            onMouseLeave={() => onUp(k.note)}
-            onTouchStart={(e) => { e.preventDefault(); onDown(k.note); }}
-            onTouchEnd={(e) => { e.preventDefault(); onUp(k.note); }}
+            onMouseDown={() => onPlay(k.note)}
+            onTouchStart={(e) => { e.preventDefault(); onPlay(k.note); }}
         >
-            {isHint && <div className="dot"></div>}
-            {k.type === 'white' && <span className="note-name">{k.name}</span>}
+            {showDot && (
+                <div className={`dot ${dotClass}`}>
+                    {finger}
+                </div>
+            )}
+            {k.type === 'white' && <span className="note-name">{k.label}</span>}
         </button>
     );
 };
