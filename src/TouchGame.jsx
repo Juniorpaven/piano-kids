@@ -81,14 +81,27 @@ function TouchGame({ onBack }) {
 
     const pianoKeys = (() => {
         let keys = [];
-        const octaves = [3, 4, 5];
+        // Generate wide range: Octave 3, 4, 5, 6
+        const octaves = [3, 4, 5, 6];
         octaves.forEach(oct => {
             NOTES_CHROMATIC.forEach(n => {
                 const type = n.includes('#') ? 'black' : 'white';
-                keys.push({ note: `${n}${oct}`, label: n, type });
+                let label = n;
+                if (type === 'white') {
+                    // Map English to Vietnamese solfege if desired, or keep simple
+                    if (n === 'C') label = 'Đô';
+                    if (n === 'D') label = 'Rê';
+                    if (n === 'E') label = 'Mi';
+                    if (n === 'F') label = 'Fa';
+                    if (n === 'G') label = 'Sol';
+                    if (n === 'A') label = 'La';
+                    if (n === 'B') label = 'Si';
+                }
+                keys.push({ note: `${n}${oct}`, label: type === 'white' ? label : null, type });
             });
         });
-        keys.push({ note: 'C6', type: 'white', label: 'C' });
+        // Add one high C7 to finish the last octave nicely? Or just stop at B6.
+        keys.push({ note: 'C7', type: 'white', label: 'Đô' });
         return keys;
     })();
 
