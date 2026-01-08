@@ -78,7 +78,7 @@ function TouchGame({ onBack }) {
     const [showConfetti, setShowConfetti] = useState(false);
 
     // New State for Demo Visuals
-    const [demoNote, setDemoNote] = useState(null);
+    const [demoIndex, setDemoIndex] = useState(-1);
 
     const gameSequence = useRef([]);
 
