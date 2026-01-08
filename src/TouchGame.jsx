@@ -134,6 +134,17 @@ function TouchGame({ onBack }) {
     };
 
 
+    const playDemo = async () => {
+        if (!targetChord || Tone.context.state !== 'running') await Tone.start();
+
+        const now = Tone.now();
+        targetChord.notes.forEach((note, i) => {
+            synth.triggerAttackRelease(note, "8n", now + i * 0.3);
+        });
+        // Play chord together at the end
+        synth.triggerAttackRelease(targetChord.notes, "2n", now + targetChord.notes.length * 0.3 + 0.3);
+    };
+
     return (
         <div className="app-container" style={{ backgroundColor: '#E0F7FA' }}>
             {/* Top Bar */}
@@ -158,10 +169,12 @@ function TouchGame({ onBack }) {
                 ) : (
                     targetChord && (
                         <div className="chord-target">
-                            <div className="chord-icon" style={{ backgroundColor: targetChord.color }}>
-                                {targetChord.notes.join(' + ')}
-                            </div>
-                            <p>Nhấn giữ 3 phím cùng lúc!</p>
+                            <h2 style={{ margin: 0, color: '#333' }}>Thử thách: {targetChord.name}</h2>
+                            <p style={{ margin: '5px 0 15px', color: '#666' }}>{targetChord.notes.join(' - ')}</p>
+
+                            <button className="btn-demo" onClick={playDemo}>
+                                ▶ Chơi thử (Demo)
+                            </button>
                         </div>
                     )
                 )}
@@ -172,7 +185,7 @@ function TouchGame({ onBack }) {
                 <div className="piano-keyboard">
                     {PIANO_KEYS.map((k) => {
                         const isActive = activeKeys.has(k.note);
-                        const isHint = targetChord?.notes.includes(k.note);
+                        const isHint = targetChord?.notes.includes(k.note) && gameMode === 'CHORD_CHALLENGE';
 
                         return (
                             <button
@@ -184,6 +197,7 @@ function TouchGame({ onBack }) {
                                 onTouchStart={(e) => { e.preventDefault(); handleNoteStart(k.note); }}
                                 onTouchEnd={(e) => { e.preventDefault(); handleNoteStop(k.note); }}
                             >
+                                {isHint && <div className="dot"></div>}
                                 {k.type === 'white' && <span className="note-name">{k.name}</span>}
                             </button>
                         );
