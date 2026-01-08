@@ -3,26 +3,50 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 20px;
+    justify-content: flex-start;
+    /* Start from top to prevent clipping */
+    height: 100dvh;
+    /* Constrain to viewport */
+    width: 100vw;
+    padding: 10px;
     background: radial-gradient(circle at center, #E0F7FA, #B2EBF2);
     overflow-y: auto;
+    /* Enable vertical scroll */
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
+}
+
+/* Header Panel inside Menu */
+.header-panel {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    max-width: 800px;
 }
 
 .title-lg {
-    font-size: 3.5rem;
+    font-size: 2rem;
+    /* Reduced from 3.5rem for mobile */
     color: #4D96FF;
-    text-shadow: 4px 4px 0px #FFF;
-    margin-bottom: 1rem;
+    text-shadow: 3px 3px 0px #FFF;
+    margin: 0.5rem 0;
     font-family: 'Comic Sans MS', sans-serif;
     text-align: center;
 }
 
+@media (min-width: 768px) {
+    .title-lg {
+        font-size: 3.5rem;
+        /* Restore for desktop/tablet */
+    }
+}
+
 .subtitle-main {
-    font-size: 1.2rem;
+    font-size: 1rem;
     color: #555;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
     text-align: center;
 }
 
@@ -85,7 +109,24 @@
     display: flex;
     justify-content: center;
     gap: 20px;
-    margin: 20px 0;
+    margin: 10px 0 20px 0;
+}
+
+.hand-btn {
+    padding: 10px 20px;
+    border-radius: 20px;
+    border: none;
+    background: white;
+    font-weight: bold;
+    color: #555;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+}
+
+.hand-btn.active {
+    background: #4CAF50;
+    color: white;
+    box-shadow: 0 5px 10px rgba(76, 175, 80, 0.3);
 }
 
 .chord-grid {
@@ -95,7 +136,8 @@
     width: 100%;
     max-width: 800px;
     /* Limit width */
-    padding-bottom: 50px;
+    padding-bottom: 80px;
+    /* Extra space for scrolling past bottom */
 }
 
 .chord-card {
@@ -106,6 +148,19 @@
     cursor: pointer;
     transition: all 0.2s;
     box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .chord-card:hover {
@@ -127,5 +182,5 @@
     text-align: center;
     font-weight: bold;
     color: #555;
-    font-size: 1rem;
+    font-size: 0.9rem;
 }
