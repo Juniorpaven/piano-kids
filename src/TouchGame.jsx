@@ -132,7 +132,11 @@ function TouchGame({ onBack }) {
             ascNotes.push({ note: `${nName}${currentOctave}`, finger: fingers[i] });
         });
 
-        const descNotes = [...ascNotes].slice(0, 7).reverse();
+        // 2. DESCENDING
+        // To make 4/4 rhythm (16 notes), we repeat the Top Note.
+        // Ascending (8 notes): C, D, E, F, G, A, B, C(Top)
+        // Descending (8 notes): C(Top), B, A, G, F, E, D, C(Bottom)
+        const descNotes = [...ascNotes].reverse();
         return [...ascNotes, ...descNotes];
     };
 
