@@ -296,7 +296,7 @@ function TouchGame({ onBack }) {
                             </>
                         ) : (
                             <>
-                                Tiếp theo: <span style={{ color: '#4CAF50', fontSize: '1.5rem' }}>{currentTarget.note?.replace(/[0-9]/, '')}</span>
+                                Tiếp theo: <span className="next-note-target">{currentTarget.note?.replace(/[0-9]/, '')}</span>
                                 <div className="finger-hint">Ngón số: <strong>{currentTarget.finger}</strong></div>
                             </>
                         )}
@@ -359,7 +359,7 @@ function TouchGame({ onBack }) {
                     })}
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
 
