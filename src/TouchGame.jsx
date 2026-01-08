@@ -292,11 +292,22 @@ const KeyComponent = ({ k, index, isCurrent, isFuture, finger, onPlay, allKeys }
     for (let i = 0; i < index; i++) {
         if (allKeys[i].type === 'white') whiteCount++;
     }
-    const WHITE_W = 58;
-    let leftPos = k.type === 'white' ? whiteCount * WHITE_W : (whiteCount * WHITE_W) - 19;
+    const WHITE_W = 60; // Match CSS width
+
+    // Position logic
+    let leftPos = 0;
+    if (k.type === 'white') {
+        leftPos = whiteCount * WHITE_W;
+    } else {
+        // Black key centered on line between white keys
+        // i.e. after whiteCount keys.
+        // position = whiteCount * 60 - (BlackWidth/2)
+        // BlackWidth is 40px in CSS
+        leftPos = (whiteCount * WHITE_W) - 20;
+    }
 
     const showDot = isCurrent || isFuture;
-    const dotClass = isCurrent ? 'current' : ''; // Future has default dim opacity from CSS
+    const dotClass = isCurrent ? 'current' : '';
 
     return (
         <button

@@ -1,162 +1,35 @@
-/* Full Screen Piano Keys - No Body Gap */
-
-.piano-scroll-container {
-  display: flex;
-  justify-content: flex-start;
-  /* Start align to allow scroll from C */
-  align-items: flex-end;
-  /* Align bottom */
-  width: 100%;
-  overflow-x: auto;
-  /* Enable Scroll */
-  background: transparent;
-  padding-bottom: 0;
-  /* Add padding to ensure last key isn't cut off by screen edge */
-  padding-right: 50px;
-  padding-left: 20px;
-}
-
-.piano-keyboard.extended {
-  /* Use max-content to allow full width */
-  width: max-content;
-  min-width: 100%;
-  height: 240px;
-  background: transparent;
-  padding: 0;
-  border: none;
-  box-shadow: none;
-  border-radius: 0;
-  position: relative;
-  margin: 0;
-  /* Align left */
-}
-
-/* Base Key Style */
-.key {
-  position: absolute;
-  border-radius: 0 0 8px 8px;
-  /* Softer bottom edge */
-  box-sizing: border-box;
-  cursor: pointer;
-  transition: transform 0.05s, background 0.1s;
-  -webkit-tap-highlight-color: transparent;
+/* Full Screen Force Layout */
+.touch-game-fullscreen {
+  position: fixed;
   top: 0;
-  /* Align to very top */
-}
-
-/* WHITE KEYS */
-.key.white {
-  width: 58px;
-  height: 240px;
-  background: white;
-  border: 1px solid #ccc;
-  border-top: none;
-  z-index: 1;
-  color: #444;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #222;
+  z-index: 9999;
+  /* On top of everything */
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 20px;
-  font-weight: 700;
-  font-size: 1.2rem;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.key.white.active {
-  background: #f0f0f0;
-  height: 235px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  border-bottom: 5px solid #ddd;
-  transform: none;
-}
-
-/* BLACK KEYS */
-.key.black {
-  width: 38px;
-  height: 150px;
-  background: #111;
-  border: 1px solid #000;
-  border-bottom: 4px solid #000;
-  border-radius: 0 0 5px 5px;
-  z-index: 10;
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
-  background: linear-gradient(to right, #222 0%, #000 20%, #000 80%, #222 100%);
-}
-
-.key.black.active {
-  background: #222;
-  height: 145px;
-  border-bottom: 1px solid #000;
-}
-
-/* Green Dot with Fingering Number */
-.key .dot {
-  position: absolute;
-  width: 30px;
-  height: 30px;
-  background: #4CAF50;
-  border: 2px solid white;
-  border-radius: 50%;
-  bottom: 50px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 20;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 1.2rem;
-  opacity: 0.6;
-  /* Future notes are dimmed */
-  transform: translateX(-50%) scale(0.9);
-}
-
-.key.black .dot {
-  bottom: 15px;
-  width: 24px;
-  height: 24px;
-  font-size: 1rem;
-}
-
-/* Current Active Note gets animation and full opacity */
-.key .dot.current {
-  opacity: 1;
-  background: #00E676;
-  /* Brighter Green */
-  box-shadow: 0 0 15px #00E676;
-  animation: bounceCurrent 0.6s infinite alternate;
-}
-
-@keyframes bounceCurrent {
-  from {
-    transform: translateX(-50%) scale(1);
-  }
-
-  to {
-    transform: translateX(-50%) scale(1.2);
-  }
-}
-
-/* Scrollbar hidden */
-.piano-scroll-container::-webkit-scrollbar {
-  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  /* No scroll on body */
 }
 
 /* Glass Panel for HUD */
 .glass-panel {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  margin: 10px;
-  border-radius: 15px;
-  padding: 10px;
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 15px;
   color: white;
+  flex-shrink: 0;
+  /* Keep size */
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .status-bar {
@@ -169,9 +42,9 @@
 
 .progress-track {
   width: 100%;
-  height: 10px;
+  height: 8px;
   background: rgba(255, 255, 255, 0.2);
-  border-radius: 5px;
+  border-radius: 4px;
   overflow: hidden;
 }
 
@@ -183,30 +56,32 @@
 }
 
 .prompt-area {
-  text-align: center;
-  margin-bottom: 2rem;
-  min-height: 80px;
+  flex: 1;
+  /* Take remaining space */
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 100%;
 }
 
 .next-note-bubble {
   background: white;
-  padding: 15px 30px;
+  padding: 20px 40px;
   border-radius: 50px;
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   font-weight: bold;
   color: #333;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   border: 4px solid #4D96FF;
   animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  text-align: center;
 }
 
 .finger-hint {
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: #666;
   margin-top: 5px;
+  display: block;
 }
 
 @keyframes popIn {
@@ -219,4 +94,141 @@
     transform: scale(1);
     opacity: 1;
   }
+}
+
+/* PIANO CONTAINER */
+.piano-scroll-container {
+  flex-shrink: 0;
+  height: 260px;
+  /* Exact height for keys */
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: #111;
+  /* Dark background behind keys */
+  display: flex;
+  align-items: flex-start;
+  padding-bottom: 0;
+  position: relative;
+}
+
+.piano-keyboard.extended {
+  position: relative;
+  height: 260px;
+  width: max-content;
+  /* Allow full expansion */
+  min-width: 100vw;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+
+/* Base Key Style */
+.key {
+  position: absolute;
+  top: 0;
+  box-sizing: border-box;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* WHITE KEYS */
+.key.white {
+  width: 60px;
+  height: 260px;
+  background: white;
+  border: 1px solid #999;
+  border-top: none;
+  z-index: 10;
+  color: #333;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 15px;
+  font-weight: 800;
+  font-size: 1.1rem;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.key.white.active-hint {
+  /* Highlight effect for active key */
+  background: #f0fff4;
+}
+
+.key.white:active {
+  background: #ddd;
+  transform: scale(0.98);
+  transform-origin: top;
+}
+
+/* BLACK KEYS */
+.key.black {
+  width: 40px;
+  height: 160px;
+  background: linear-gradient(to bottom, #333, #000);
+  border: 1px solid #000;
+  border-bottom: 4px solid #000;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  z-index: 20;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.key.black:active {
+  background: #222;
+  transform: scale(0.98);
+  transform-origin: top;
+}
+
+/* DOTS */
+.key .dot {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #4CAF50;
+  border: 2px solid #fff;
+  color: #fff;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+  bottom: 50px;
+  /* White key pos */
+  opacity: 0.5;
+  /* Dim future */
+}
+
+.key.black .dot {
+  bottom: 20px;
+  width: 24px;
+  height: 24px;
+  font-size: 0.9rem;
+}
+
+.key .dot.current {
+  opacity: 1;
+  background: #00E676;
+  box-shadow: 0 0 15px #00E676;
+  transform: translateX(-50%) scale(1.1);
+  animation: bounceDot 0.5s infinite alternate;
+}
+
+@keyframes bounceDot {
+  from {
+    transform: translateX(-50%) scale(1);
+  }
+
+  to {
+    transform: translateX(-50%) scale(1.2);
+  }
+}
+
+.note-name {
+  pointer-events: none;
 }
