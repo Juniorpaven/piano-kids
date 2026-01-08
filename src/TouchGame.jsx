@@ -215,10 +215,10 @@ function TouchGame({ onBack }) {
     const progressPercent = Math.min(100, (stepIndex / gameSequence.current.length) * 100);
 
     return (
-        <div className="app-container" style={{ backgroundColor: '#222' }}>
+        <div className="touch-game-fullscreen">
             {showConfetti && <Confetti recycle={false} numberOfPieces={300} />}
 
-            <div className="header-panel glass-panel">
+            <div className="glass-panel">
                 <button className="btn-small" onClick={() => setView('SELECTION')}>🔙 Menu</button>
                 <div className="status-bar">
                     <div style={{ color: 'white', fontWeight: 'bold', fontSize: '1.2rem' }}>
