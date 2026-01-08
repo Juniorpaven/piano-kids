@@ -142,13 +142,13 @@ function TouchGame({ onBack }) {
             gameSequence.current = getGameSequence();
             setStepIndex(0);
             setGameStatus('PLAYING');
-            setDemoNote(null);
+            setDemoIndex(-1);
         }
     }, [currentScale, handMode]);
 
     const handleNotePlay = async (playedNote) => {
         // Ignore input during demo
-        if (demoNote) return;
+        if (gameStatus === 'DEMO') return;
 
         if (Tone.context.state !== 'running') await Tone.start();
         if (synth) synth.triggerAttackRelease(playedNote, "8n");
