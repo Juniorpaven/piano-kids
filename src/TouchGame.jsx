@@ -1,33 +1,51 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import * as Tone from 'tone';
-import './App.css';
+import Confetti from 'react-confetti';
+import './TouchGame.css';
 
-// Constants
-const NOTES = [
-    { note: 'C4', label: 'C', color: '#FF5E5B', name: 'Đô' },
-    { note: 'D4', label: 'D', color: '#FFB347', name: 'Rê' },
-    { note: 'E4', label: 'E', color: '#FFD93D', name: 'Mi' },
-    { note: 'F4', label: 'F', color: '#6BCB77', name: 'Pha' },
-    { note: 'G4', label: 'G', color: '#4D96FF', name: 'Son' },
-    { note: 'A4', label: 'A', color: '#845EC2', name: 'La' },
-    { note: 'B4', label: 'B', color: '#FF96BE', name: 'Si' },
+// Cập nhật danh sách nốt đầy đủ cho 1 quãng 8 (Octave 4)
+// type: 'white' | 'black'
+const PIANO_KEYS = [
+    { note: 'C4', label: 'C', type: 'white', name: 'Đô' },
+    { note: 'C#4', label: 'C#', type: 'black', name: '' },
+    { note: 'D4', label: 'D', type: 'white', name: 'Rê' },
+    { note: 'D#4', label: 'D#', type: 'black', name: '' },
+    { note: 'E4', label: 'E', type: 'white', name: 'Mi' },
+    { note: 'F4', label: 'F', type: 'white', name: 'Pha' },
+    { note: 'F#4', label: 'F#', type: 'black', name: '' },
+    { note: 'G4', label: 'G', type: 'white', name: 'Son' },
+    { note: 'G#4', label: 'G#', type: 'black', name: '' },
+    { note: 'A4', label: 'A', type: 'white', name: 'La' },
+    { note: 'A#4', label: 'A#', type: 'black', name: '' },
+    { note: 'B4', label: 'B', type: 'white', name: 'Si' },
+];
+
+const CHORDS = [
+    { id: 'C_MAJOR', name: 'Sức Mạnh Lửa 🔥', root: 'Đô Trưởng', notes: ['C4', 'E4', 'G4'], color: '#FF5E5B' },
+    { id: 'D_MAJOR', name: 'Rừng Xanh 🌲', root: 'Rê Trưởng', notes: ['D4', 'F#4', 'A4'], color: '#4D96FF' }, // Sửa màu sau
+    { id: 'E_MAJOR', name: 'Ánh Sáng ☀️', root: 'Mi Trưởng', notes: ['E4', 'G#4', 'B4'], color: '#FFD93D' },
 ];
 
 function TouchGame({ onBack }) {
     const [synth, setSynth] = useState(null);
     const [coins, setCoins] = useState(() => parseInt(localStorage.getItem('pk_coins') || '0'));
-    const [activeKey, setActiveKey] = useState(null);
+
+    // Chord Game State
+    const [gameMode, setGameMode] = useState('FREE'); // FREE, CHORD_CHALLENGE
+    const [targetChord, setTargetChord] = useState(null);
+    const [activeKeys, setActiveKeys] = useState(new Set());
+    const [showConfetti, setShowConfetti] = useState(false);
+    const [feedback, setFeedback] = useState('');
+
+    // Refs for tracking multi-touch logic
+    const activeKeysRef = useRef(new Set());
 
     // Initialize Audio
     useEffect(() => {
         const newSynth = new Tone.PolySynth(Tone.Synth, {
             oscillator: { type: 'triangle' },
-            envelope: {
-                attack: 0.005,
-                decay: 0.1,
-                sustain: 0.3,
-                release: 1
-            }
+            envelope: { attack: 0.01, decay: 0.1, sustain: 0.3, release: 1 },
+            maxPolyphony: 6
         }).toDestination();
         setSynth(newSynth);
 
@@ -36,62 +54,141 @@ function TouchGame({ onBack }) {
         };
     }, []);
 
-    const playNote = async (note) => {
-        if (Tone.context.state !== 'running') {
-            await Tone.start();
-        }
+    // ---------------
+    // GAME LOGIC
+    // ---------------
+    const startChordChallenge = () => {
+        setGameMode('CHORD_CHALLENGE');
+        nextChord();
+    };
 
-        if (synth) {
-            synth.triggerAttackRelease(note, '8n');
-            setActiveKey(note);
-            setTimeout(() => setActiveKey(null), 200);
+    const nextChord = () => {
+        const randomChord = CHORDS[Math.floor(Math.random() * CHORDS.length)];
+        setTargetChord(randomChord);
+        setFeedback('Hãy triệu hồi: ' + randomChord.name);
+        setShowConfetti(false);
+    };
 
-            // Earn coin logic (simplified for now)
-            const newCoins = coins + 1;
-            setCoins(newCoins);
-            localStorage.setItem('pk_coins', newCoins);
+    const checkChord = (currentKeys) => {
+        if (gameMode !== 'CHORD_CHALLENGE' || !targetChord) return;
+
+        // Check if all target notes are being held
+        const allNotesPressed = targetChord.notes.every(note => currentKeys.has(note));
+
+        if (allNotesPressed) {
+            handleSuccess();
         }
     };
 
+    const handleSuccess = () => {
+        setFeedback('TUYỆT VỜI! SIÊU NĂNG LƯỢNG KÍCH HOẠT! ⚡');
+        setShowConfetti(true);
+        playSound('win');
+
+        const bonus = 10;
+        updateCoins(bonus);
+
+        setTimeout(() => {
+            nextChord();
+        }, 3000);
+    };
+
+    const updateCoins = (amount) => {
+        const newCoins = coins + amount;
+        setCoins(newCoins);
+        localStorage.setItem('pk_coins', newCoins);
+    };
+
+    const playSound = (type) => { // Simple SFX helper placeholder
+        // Implementation can reuse Tone.js or separate buffer
+    };
+
+    // ---------------
+    // INTERACTION HANDLERS
+    // ---------------
+    const handleNoteStart = async (note) => {
+        if (Tone.context.state !== 'running') await Tone.start();
+
+        if (synth) synth.triggerAttack(note);
+
+        // Update Active Keys
+        const newSet = new Set(activeKeysRef.current);
+        newSet.add(note);
+        activeKeysRef.current = newSet;
+        setActiveKeys(new Set(newSet)); // Trigger render
+
+        // Check Logic
+        checkChord(newSet);
+
+        // Coin for free play
+        if (gameMode === 'FREE') updateCoins(1);
+    };
+
+    const handleNoteStop = (note) => {
+        if (synth) synth.triggerRelease(note);
+
+        const newSet = new Set(activeKeysRef.current);
+        newSet.delete(note);
+        activeKeysRef.current = newSet;
+        setActiveKeys(new Set(newSet));
+    };
+
+
     return (
-        <div className="app-container" style={{ backgroundColor: '#FFF5E1' }}>
+        <div className="app-container" style={{ backgroundColor: '#E0F7FA' }}>
+            {/* Top Bar */}
             <div className="header-panel">
                 <button className="btn-small" onClick={onBack}>🏠</button>
-                <div className="coin-display">
-                    🟡 {coins} Xu Nhạc
+                <div style={{ flex: 1, textAlign: 'center', fontWeight: 'bold', color: '#555', fontSize: '1.2rem' }}>
+                    {gameMode === 'CHORD_CHALLENGE' ? feedback : 'Chế độ Tự Do'}
                 </div>
+                <div className="coin-display">🟡 {coins}</div>
             </div>
 
-            <div className="game-area" style={{ display: 'flex', flexDirection: 'column', height: '80vh', justifyContent: 'space-around' }}>
+            {showConfetti && <Confetti recycle={false} numberOfPieces={500} />}
 
-                <div className="stage-area">
-                    <h2 style={{ color: '#555', marginTop: 0 }}>Đảo Kẹo Ngọt 🏝️</h2>
-                    {/* Future: Pet Animation Here */}
-                    <div style={{ fontSize: '5rem', animation: activeKey ? 'bounce 0.5s' : 'none' }}>
-                        {activeKey ? '🎵' : '🦗'}
-                    </div>
-                </div>
-
-                {/* Virtual Piano */}
-                <div className="piano-container">
-                    {NOTES.map((n) => (
-                        <button
-                            key={n.note}
-                            className="piano-key"
-                            onMouseDown={() => playNote(n.note)}
-                            onTouchStart={(e) => { e.preventDefault(); playNote(n.note); }}
-                            style={{
-                                backgroundColor: n.color,
-                                transform: activeKey === n.note ? 'scale(0.9) translateY(5px)' : 'scale(1)',
-                                boxShadow: activeKey === n.note ? 'none' : `0 8px 0 rgba(0,0,0,0.2)`
-                            }}
-                        >
-                            <div className="key-label">{n.name}</div>
-                            <div className="key-sub">{n.label}</div>
+            {/* Main Stats / Challenge Info */}
+            <div className="stage-area">
+                {gameMode === 'FREE' ? (
+                    <div style={{ textAlign: 'center' }}>
+                        <button className="btn-challenge" onClick={startChordChallenge}>
+                            BẮT ĐẦU THỬ THÁCH TRIỆU HỒI 🔥
                         </button>
-                    ))}
-                </div>
+                    </div>
+                ) : (
+                    targetChord && (
+                        <div className="chord-target">
+                            <div className="chord-icon" style={{ backgroundColor: targetChord.color }}>
+                                {targetChord.notes.join(' + ')}
+                            </div>
+                            <p>Nhấn giữ 3 phím cùng lúc!</p>
+                        </div>
+                    )
+                )}
+            </div>
 
+            {/* PIANO KEYBOARD */}
+            <div className="piano-scroll-container">
+                <div className="piano-keyboard">
+                    {PIANO_KEYS.map((k) => {
+                        const isActive = activeKeys.has(k.note);
+                        const isHint = targetChord?.notes.includes(k.note);
+
+                        return (
+                            <button
+                                key={k.note}
+                                className={`key ${k.type} ${isActive ? 'active' : ''} ${isHint ? 'hint blob' : ''}`}
+                                onMouseDown={() => handleNoteStart(k.note)}
+                                onMouseUp={() => handleNoteStop(k.note)}
+                                onMouseLeave={() => handleNoteStop(k.note)}
+                                onTouchStart={(e) => { e.preventDefault(); handleNoteStart(k.note); }}
+                                onTouchEnd={(e) => { e.preventDefault(); handleNoteStop(k.note); }}
+                            >
+                                {k.type === 'white' && <span className="note-name">{k.name}</span>}
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );

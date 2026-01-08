@@ -1,55 +1,71 @@
-/* Virtual Piano Styles */
-.piano-container {
+/* CSS hack to position black keys correctly in a flat list with E-F gap handled */
+/* Reset generic margins */
+.piano-keyboard {
   display: flex;
-  justify-content: center;
-  gap: 10px;
-  padding: 20px;
-  flex-wrap: wrap;
+  align-items: flex-start;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
-.piano-key {
-  width: 60px; /* Mobile friendly */
-  height: 200px;
-  border: 4px solid white;
-  border-radius: 15px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: center;
-  padding-bottom: 20px;
-  cursor: pointer;
-  transition: transform 0.1s, box-shadow 0.1s;
-  position: relative;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
+.key.white {
+  width: 60px;
+  margin-right: 4px;
+  /* Small gap between white keys */
 }
 
-.key-label {
-  font-size: 1.5rem;
-  font-weight: 900;
-  color: white;
-  text-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+/* 
+  Manual Positioning Hack for Octave 4 C-D-E-F-G-A-B 
+  C# is between 1st and 2nd white key.
+  D# is between 2nd and 3rd.
+  NO black between 3rd (E) and 4th (F).
+  Etc.
+  
+  Since we render a flat list of 12 keys (7 white, 5 black), we use the order in DOM.
+  DOM Order: C, C#, D, D#, E, F, F#, G, G#, A, A#, B
+  
+  Flexbox will place them side by side.
+  We want Black keys to NOT take up space in the flow, but sit ON TOP of the gap.
+*/
+
+.key.black {
+  width: 40px;
+  position: absolute;
+  /* Remove from flow */
+  height: 150px;
 }
 
-.key-sub {
-  font-size: 1rem;
-  color: rgba(255,255,255,0.8);
+/* Absolute positions relative to the keyboard container. 
+   Assuming white key width ~60px + 4px margin = 64px slot. 
+   Black key should be centered roughly at 64px, 128px, etc.
+*/
+
+/* C# */
+.key:nth-child(2) {
+  left: 50px;
 }
 
-.coin-display {
-  background: white;
-  padding: 0.5rem 1.5rem;
-  border-radius: 20px;
-  font-weight: bold;
-  font-size: 1.2rem;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  color: #F7B731;
-  border: 2px solid #F7B731;
+/* D# */
+.key:nth-child(4) {
+  left: 115px;
 }
 
-@media (min-width: 768px) {
-  .piano-key {
-    width: 80px;
-    height: 250px;
-  }
+/* F# (Skipping E-F gap) - F is 6th in DOM but 4th white key. 
+   C (1), D (3), E (5), F (6).
+   Start of F is approx index 3 * 64 = 192px.
+   F# should be after F.
+*/
+.key:nth-child(7) {
+  left: 245px;
 }
+
+/* G# */
+.key:nth-child(9) {
+  left: 310px;
+}
+
+/* A# */
+.key:nth-child(11) {
+  left: 375px;
+}
+
+/* Responsive adjustments could be needed but this fixes the visual for standard Width */
