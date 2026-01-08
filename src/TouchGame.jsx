@@ -80,6 +80,18 @@ function TouchGame({ onBack }) {
     // New State for Demo Visuals
     const [demoIndex, setDemoIndex] = useState(-1);
 
+    // Orientation Logic
+    const [isPortrait, setIsPortrait] = useState(window.innerHeight > window.innerWidth);
+    const [forceRotate, setForceRotate] = useState(false);
+
+    useEffect(() => {
+        const checkOrientation = () => {
+            setIsPortrait(window.innerHeight > window.innerWidth);
+        };
+        window.addEventListener('resize', checkOrientation);
+        return () => window.removeEventListener('resize', checkOrientation);
+    }, []);
+
     const gameSequence = useRef([]);
 
     // Generate EXTRA WIDE KEYS to fill all screens (C3 to C8)
@@ -242,14 +254,20 @@ function TouchGame({ onBack }) {
     const progressPercent = Math.min(100, (stepIndex / gameSequence.current.length) * 100);
 
     return (
-        <div className="touch-game-fullscreen">
+        <div className={`touch-game-fullscreen ${forceRotate ? 'forced-landscape' : ''}`}>
             {showConfetti && <Confetti recycle={false} numberOfPieces={300} />}
 
-            <div className="portrait-warning">
-                <div className="rotate-icon">📱➡️</div>
-                <h2>Vui lòng xoay ngang điện thoại!</h2>
-                <p>Ứng dụng hoạt động tốt nhất ở chế độ ngang.</p>
-            </div>
+            {/* Warning Overlay controlled by React */}
+            {(isPortrait && !forceRotate) && (
+                <div className="portrait-warning" style={{ display: 'flex' }}>
+                    <div className="rotate-icon">📱➡️</div>
+                    <h2>Vui lòng xoay ngang điện thoại!</h2>
+                    <p>Hoặc ấn nút dưới để xoay ép buộc.</p>
+                    <button className="btn-force-rotate" onClick={() => setForceRotate(true)}>
+                        🔄 Xoay Ngang Ngay
+                    </button>
+                </div>
+            )}
 
             <div className="glass-panel">
                 <button className="btn-small" onClick={() => setView('SELECTION')}>🔙 Menu</button>
