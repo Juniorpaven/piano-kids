@@ -2,8 +2,8 @@
 
 .piano-scroll-container {
   display: flex;
-  justify-content: center;
-  /* Center if fits */
+  justify-content: flex-start;
+  /* Start align to allow scroll from C */
   align-items: flex-end;
   /* Align bottom */
   width: 100%;
@@ -11,10 +11,13 @@
   /* Enable Scroll */
   background: transparent;
   padding-bottom: 0;
+  /* Add padding to ensure last key isn't cut off by screen edge */
+  padding-right: 50px;
+  padding-left: 20px;
 }
 
 .piano-keyboard.extended {
-  /* Use max-content to allow full width of 3 octaves */
+  /* Use max-content to allow full width */
   width: max-content;
   min-width: 100%;
   height: 240px;
@@ -24,7 +27,8 @@
   box-shadow: none;
   border-radius: 0;
   position: relative;
-  margin: 0 auto;
+  margin: 0;
+  /* Align left */
 }
 
 /* Base Key Style */
