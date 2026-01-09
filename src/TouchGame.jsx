@@ -424,6 +424,9 @@ const KeyComponent = ({ k, index, isCurrent, isFuture, finger, onPlay, allKeys }
     // So 'whiteCount' is exactly the number of white keys before this black key.
     // Position should be: (whiteCount * W) - (BlackW / 2).
 
+    const showDot = isCurrent || isFuture;
+    const dotClass = isCurrent ? 'current' : '';
+
     return (
         <button
             className={`key ${k.type} ${isCurrent ? 'active-hint' : ''}`}
