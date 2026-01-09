@@ -69,6 +69,7 @@ const NOTES_CHROMATIC = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', '
 function TouchGame({ onBack }) {
     const [synth, setSynth] = useState(null);
     const [coins, setCoins] = useState(() => parseInt(localStorage.getItem('pk_coins') || '0'));
+    const [isLoaded, setIsLoaded] = useState(false); // Track sampler loading status
 
     const [view, setView] = useState('SELECTION');
     const [handMode, setHandMode] = useState('RIGHT');
@@ -94,10 +95,11 @@ function TouchGame({ onBack }) {
 
     const gameSequence = useRef([]);
 
-    // Generate EXTRA WIDE KEYS to fill all screens (C3 to C8)
+    // FIXED: Generate exactly 2 octaves (C4 to B5) just for the demo range
+    // Adjust logic to fit 'C to B' twice => C4...B4 and C5...B5.
     const pianoKeys = (() => {
         let keys = [];
-        const octaves = [3, 4, 5, 6, 7]; // 5 Octaves!
+        const octaves = [4, 5]; // Exactly 2 Octaves
         octaves.forEach(oct => {
             NOTES_CHROMATIC.forEach(n => {
                 const type = n.includes('#') ? 'black' : 'white';
@@ -114,23 +116,34 @@ function TouchGame({ onBack }) {
                 keys.push({ note: `${n}${oct}`, label: type === 'white' ? label : null, type });
             });
         });
-        // Top C8
-        keys.push({ note: 'C8', type: 'white', label: 'Đô' });
+        // We stop at B5 to have exactly 2 full sets: C4-B4, C5-B5.
+        // User requested "tu not do den si 2 lan" -> C to B twice.
         return keys;
     })();
 
+    // NEW SOUND ENGINE: Tone.Sampler
     useEffect(() => {
-        const reliableSynth = new Tone.PolySynth(Tone.Synth, {
-            oscillator: { type: 'triangle' },
-            envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 1 }
+        const sampler = new Tone.Sampler({
+            urls: {
+                "C4": "C4.mp3",
+                "D#4": "Ds4.mp3",
+                "F#4": "Fs4.mp3",
+                "A4": "A4.mp3",
+            },
+            release: 1,
+            baseUrl: "https://tonejs.github.io/audio/salamander/",
+            onload: () => {
+                setIsLoaded(true);
+            }
         }).toDestination();
-        setSynth(reliableSynth);
-        return () => reliableSynth.dispose();
+
+        setSynth(sampler);
+        return () => sampler.dispose();
     }, []);
 
     const getGameSequence = () => {
         if (!currentScale) return [];
-        const baseOctave = handMode === 'RIGHT' ? 4 : 3;
+        const baseOctave = handMode === 'RIGHT' ? 4 : 4; // Keep in visible range 4-5
         const notes = currentScale.notes;
         const fingers = currentScale.fingering[handMode];
         let currentOctave = baseOctave;
@@ -163,7 +176,11 @@ function TouchGame({ onBack }) {
         if (gameStatus === 'DEMO') return;
 
         if (Tone.context.state !== 'running') await Tone.start();
-        if (synth) synth.triggerAttackRelease(playedNote, "8n");
+
+        // Play sound if loaded, else fallback or silent
+        if (synth && isLoaded) {
+            synth.triggerAttackRelease(playedNote, "8n");
+        }
 
         if (view === 'PLAY' && gameStatus === 'PLAYING') {
             const target = gameSequence.current[stepIndex];
@@ -181,7 +198,7 @@ function TouchGame({ onBack }) {
     };
 
     const playWinMelody = () => {
-        if (!synth) return;
+        if (!synth || !isLoaded) return;
         const now = Tone.now();
         synth.triggerAttackRelease("C5", "8n", now);
         synth.triggerAttackRelease("E5", "8n", now + 0.1);
@@ -208,7 +225,7 @@ function TouchGame({ onBack }) {
 
         sequence.forEach((item, i) => {
             // Audio
-            synth.triggerAttackRelease(item.note, "8n", now + i * 0.5);
+            if (synth && isLoaded) synth.triggerAttackRelease(item.note, "8n", now + i * 0.5);
 
             // Visual: Update Index
             setTimeout(() => {
@@ -306,6 +323,7 @@ function TouchGame({ onBack }) {
 
             <div className="piano-scroll-container">
                 <div className="piano-keyboard extended">
+                    {/* Render Loading State if samples aren't ready? Optional, but good UX. For now, keys appear but maybe no sound immediately */}
                     {pianoKeys.map((k, i) => {
                         let fingerToDisplay = null;
                         let isCurrent = false;
@@ -359,27 +377,66 @@ function TouchGame({ onBack }) {
                     })}
                 </div>
             </div>
-        </div >
+        </div>
     );
 }
 
 const KeyComponent = ({ k, index, isCurrent, isFuture, finger, onPlay, allKeys }) => {
+    // REFACTOR: No absolute pixels for positions. We use Flexbox in parent, 
+    // so keys just need relative width or flex-grow.
+    // However, for correct piano spacing (black keys between white), we probably stick to absolute OR
+    // use a grid system. 
+    // Given the constraints, let's stick to the previous absolute logic BUT adapted to percentages or 
+    // simply let the CSS handle the layout if rewritten.
+
+    // BUT, the CSS for "extended" still expects absolute positioning for keys? 
+    // We need to change the CSS method if we want perfect "fit to screen" without horizontal scroll.
+    // The Quickest fix for "fit to screen" with 14 white keys is to use percentage based left positions.
+
+    // 14 White keys total (C4...B4, C5...B5) -> 7 * 2 = 14 keys.
+    const TOTAL_WHITE_KEYS = 14;
+    const WHITE_WIDTH_PERCENT = 100 / TOTAL_WHITE_KEYS; // ~7.14%
+
     let whiteCount = 0;
     for (let i = 0; i < index; i++) {
         if (allKeys[i].type === 'white') whiteCount++;
     }
-    const WHITE_W = 60; // Match CSS
-    let leftPos = k.type === 'white' ? whiteCount * WHITE_W : (whiteCount * WHITE_W) - 20;
 
-    const showDot = isCurrent || isFuture;
-    const dotClass = isCurrent ? 'current' : '';
+    const leftPosPercent = whiteCount * WHITE_WIDTH_PERCENT;
+
+    // For Black Key: It sits on the border of (N) and (N+1) white key.
+    // usually shifted roughly 2/3 of a white key width.
+    // Width of black key is usually 2/3 of white key.
+    // Let's approximate: Left = (whiteCount * W) - (BlackW / 2). 
+    // But white keys are continuous. 
+    // Correct visual logic: C# is between C and D. 
+    // C is at index 0 (white). D is at index 1 (white).
+    // so C# starts at approx (1 * W) - (BlackW/2).
+
+    // Let's refine:
+    // If Key is White: Left = whiteCount * WIDTH.
+    // If Key is Black: It comes AFTER the white key 'whiteCount'. 
+    // Wait, 'whiteCount' calculated above includes ALL previous keys.
+    // If current is Black, it corresponds to the gap after the PREVIOUS white key.
+    // So 'whiteCount' is exactly the number of white keys before this black key.
+    // Position should be: (whiteCount * W) - (BlackW / 2).
 
     return (
         <button
             className={`key ${k.type} ${isCurrent ? 'active-hint' : ''}`}
-            style={{ left: `${leftPos}px` }}
-            onMouseDown={() => onPlay(k.note)}
-            onTouchStart={(e) => { e.preventDefault(); onPlay(k.note); }}
+            // Use inline style for position to support variable width
+            style={{
+                left: k.type === 'white' ? `${leftPosPercent}%` : `calc(${leftPosPercent}% - 2%)`,
+                width: k.type === 'white' ? `${WHITE_WIDTH_PERCENT}%` : '4%', // Black key approx 4%
+            }}
+            // REMOVED onTouchStart default behavior that might slide. 
+            // We keep onTouchStart but typically we want to prevent default if it causes scrolling.
+            // "gạt tay" issue: if they drag across keys, we might WANT it to NOT play 
+            // if the user says "tự chạy". Or maybe they mean it plays MULTIPLE times?
+            // "Disabled glissando" usually means we strictly listen to DOWN events on specific keys.
+            onMouseDown={(e) => { e.preventDefault(); onPlay(k.note); }}
+            onTouchStart={(e) => { e.stopPropagation(); onPlay(k.note); }} // Stop propagation might help
+        // No onTouchMove or onMouseEnter to prevent "swipe" playing
         >
             {showDot && (
                 <div className={`dot ${dotClass}`}>

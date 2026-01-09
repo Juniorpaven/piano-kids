@@ -112,21 +112,20 @@
 .piano-scroll-container {
   flex: 1 1 auto;
   /* Grow to fill space, shrink if needed */
-  width: 100%;
+  width: 100vw;
+  /* Exact screen width */
   min-height: 0;
   /* Crucial for flex nested scrolling */
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: hidden;
+  /* DISABLE SCROLLING */
   background: #111;
   display: flex;
   align-items: flex-start;
   /* Align top so keys hang down */
   position: relative;
-  /* Custom scrollbar for better feel */
-  -webkit-overflow-scrolling: touch;
 }
 
-/* Hide scrollbar but keep functionality if desired, or style it */
+/* Hide scrollbar */
 .piano-scroll-container::-webkit-scrollbar {
   display: none;
 }
@@ -135,7 +134,8 @@
   position: relative;
   height: 100%;
   /* Fill container */
-  width: max-content;
+  width: 100vw;
+  /* Force exact fit */
   min-width: 100vw;
   margin: 0;
   padding: 0;
@@ -155,7 +155,7 @@
 
 /* WHITE KEYS - Height 100% of container */
 .key.white {
-  width: 60px;
+  /* Width handled by inline style for responsiveness */
   height: 100%;
   /* Full height */
   background: white;
@@ -166,7 +166,8 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding-bottom: 15px;
+  padding-bottom: 2%;
+  /* Responsive padding */
   font-weight: 800;
   font-size: 1.1rem;
   border-bottom-left-radius: 8px;
@@ -185,7 +186,7 @@
 
 /* BLACK KEYS - Percentage Height */
 .key.black {
-  width: 40px;
+  /* Width handled by inline style */
   height: 60%;
   /* Relative to container */
   background: linear-gradient(to bottom, #333, #000);
