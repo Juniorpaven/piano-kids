@@ -4,7 +4,7 @@ import Confetti from 'react-confetti';
 import './TouchGame.css';
 import './MainMenu.css';
 
-// --- DATA: SCALES & FINGERING (Expanded for Demo) ---
+// --- DATA: SCALES & FINGERING (Verified) ---
 const SCALES = [
     {
         id: 'C_MAJOR', name: 'Đô Trưởng (C)', root: 'C', color: '#ef5350',
@@ -86,9 +86,7 @@ function TouchGame({ onBack }) {
     const [forceRotate, setForceRotate] = useState(false);
 
     useEffect(() => {
-        const checkOrientation = () => {
-            setIsPortrait(window.innerHeight > window.innerWidth);
-        };
+        const checkOrientation = () => setIsPortrait(window.innerHeight > window.innerWidth);
         window.addEventListener('resize', checkOrientation);
         return () => window.removeEventListener('resize', checkOrientation);
     }, []);
@@ -167,41 +165,39 @@ function TouchGame({ onBack }) {
 
     const getGameSequence = () => {
         if (!currentScale) return [];
-        // Base Octave 3 to match the C3-B4 keyboard
-        const baseOctave = 3;
         const notes = currentScale.notes;
         const fingers = currentScale.fingering[handMode];
-        let currentOctave = baseOctave;
 
-        // Fix: Explicitly handle octave wrap for B->C transition if root is B, etc
-        // The previous logic relying on index < lastIndex is generally okay for ascending scales 
-        // starting on C. But for B Major (B, C#, D#...), B is index 11. C# is index 1.
-        // 1 < 11, so octave increments. This is correct.
-        // BUT, what if the scale is C Major? C, D, E... Indices: 0, 2, 4... No increment.
-        // So C3, D3, E3... Correct.
+        let currentOctave = 3; // Base Octave C3
 
-        // Wait, why did user say C->D?
-        // Maybe the KEYBOARD LABELS are wrong? 
-        // Let's look at key generation again in next block.
-
-        let lastNoteIdx = -1;
-
+        // Logic: Build ascending sequence
         const ascNotes = [];
-        notes.forEach((nName, i) => {
-            const nIdx = NOTES_CHROMATIC.indexOf(nName.includes('#') ? nName : nName.replace(/[0-9]/g, ''));
+        let previousIndex = -1;
 
-            // Special case logic: If it's the very first note, and it's NOT C, 
-            // check if we should start on next octave? 
-            // No, user requested C3-B4. So if Scale is B Major, it starts on B3.
-            // Then C#4, D#4...
-            // If Scale is C Major, C3.
+        notes.forEach((n, i) => {
+            // Find chromatic index (0-11)
+            const nClean = n.includes('#') ? n : n.replace(/[0-9]/g, '');
+            const idx = NOTES_CHROMATIC.indexOf(nClean);
 
-            if (lastNoteIdx !== -1 && nIdx < lastNoteIdx) { currentOctave++; }
-            lastNoteIdx = nIdx;
-            ascNotes.push({ note: `${nName}${currentOctave}`, finger: fingers[i] });
+            // Logic for octave shift:
+            // If current note index is LOWER than previous, we crossed B->C, so octave++
+            // Exception: The very first note. 
+            // If the first note is 'middle of range' and we want to ensure we start low?
+            // Actually, we just start at 3. The loop handles the rest.
+
+            if (previousIndex !== -1) {
+                if (idx < previousIndex) {
+                    currentOctave++;
+                }
+            }
+            previousIndex = idx;
+
+            ascNotes.push({ note: `${nClean}${currentOctave}`, finger: fingers[i] });
         });
 
-        // 2. DESCENDING (With Top Note Repeat for Rhythm)
+        // Debug: Log the generated sequence start
+        console.log("Generated Sequence Start:", ascNotes[0]);
+
         const descNotes = [...ascNotes].reverse();
         return [...ascNotes, ...descNotes];
     };
