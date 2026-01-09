@@ -60,6 +60,16 @@ function MicGame({ onBack }) {
   const [detectedNote, setDetectedNote] = useState('-');
   const [showConfetti, setShowConfetti] = useState(false);
 
+  // ORTENTATION LOGIC (Moved to top level to fix React Error #310)
+  const [isPortrait, setIsPortrait] = useState(window.innerHeight > window.innerWidth);
+  const [forceRotate, setForceRotate] = useState(false);
+
+  useEffect(() => {
+    const checkOrientation = () => setIsPortrait(window.innerHeight > window.innerWidth);
+    window.addEventListener('resize', checkOrientation);
+    return () => window.removeEventListener('resize', checkOrientation);
+  }, []);
+
   // GENERATE KEYS (Copy from TouchGame for consistency C3-B4)
   const NOTES_CHROMATIC_KEYS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
   const pianoKeys = React.useMemo(() => {
@@ -202,15 +212,7 @@ function MicGame({ onBack }) {
   }
 
   // PLAYING STATE
-  const targetNote = currentScale.notes[stepIndex];  // ORITENTATION LOGIC
-  const [isPortrait, setIsPortrait] = useState(window.innerHeight > window.innerWidth);
-  const [forceRotate, setForceRotate] = useState(false);
-
-  useEffect(() => {
-    const checkOrientation = () => setIsPortrait(window.innerHeight > window.innerWidth);
-    window.addEventListener('resize', checkOrientation);
-    return () => window.removeEventListener('resize', checkOrientation);
-  }, []);
+  const targetNote = currentScale.notes[stepIndex];  // e.g. "C"
 
   // We need to map targetNote to a specific key? 
   // For simplicitly, let's say "C" maps to "C3" or "C4" based on the step logic?
