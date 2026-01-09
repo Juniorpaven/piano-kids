@@ -287,17 +287,20 @@ function TouchGame({ onBack }) {
             )}
 
             <div className="glass-panel">
-                <button className="btn-small" onClick={() => setView('SELECTION')}>🔙 Menu</button>
+                <button className="btn-menu-back" onClick={() => setView('SELECTION')}>
+                    <span style={{ fontSize: '1.5rem' }}>🏠</span>
+                    <span>Menu</span>
+                </button>
                 <div className="status-bar">
-                    <div style={{ color: 'white', fontWeight: 'bold', fontSize: '1.2rem' }}>
-                        {gameStatus === 'WIN' ? '🎉 HOÀN THÀNH XUẤT SẮC! +5 SAO' : `Bài: ${currentScale?.name} (${handMode === 'RIGHT' ? 'Tay Phải' : 'Tay Trái'})`}
+                    <div style={{ color: 'white', fontWeight: 'bold', fontSize: '1.2rem', marginBottom: '5px' }}>
+                        {gameStatus === 'WIN' ? '🎉' : `Bài: ${currentScale?.name}`}
                     </div>
                     <div className="progress-track">
                         <div className="progress-fill" style={{ width: `${progressPercent}%` }}></div>
                     </div>
                 </div>
-                <button className="btn-demo" disabled={gameStatus === 'DEMO'} onClick={playDemo}>
-                    {gameStatus === 'DEMO' ? '▶ Đang chạy...' : '▶ Nghe Mẫu'}
+                <button className={`btn-demo ${gameStatus === 'DEMO' ? 'active' : ''}`} disabled={gameStatus === 'DEMO'} onClick={playDemo}>
+                    {gameStatus === 'DEMO' ? '⏹ Đang chạy' : '▶ Nghe Mẫu'}
                 </button>
             </div>
 
