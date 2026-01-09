@@ -3,6 +3,7 @@ import * as Tone from 'tone';
 import Confetti from 'react-confetti';
 import './TouchGame.css';
 import './MainMenu.css';
+import KeyComponent from './components/KeyComponent';
 
 // --- DATA: SCALES & FINGERING (Verified) ---
 const SCALES = [
@@ -440,75 +441,5 @@ function TouchGame({ onBack }) {
         </div>
     );
 }
-
-const KeyComponent = ({ k, index, isCurrent, isFuture, finger, onPlay, allKeys }) => {
-    // REFACTOR: No absolute pixels for positions. We use Flexbox in parent, 
-    // so keys just need relative width or flex-grow.
-    // However, for correct piano spacing (black keys between white), we probably stick to absolute OR
-    // use a grid system. 
-    // Given the constraints, let's stick to the previous absolute logic BUT adapted to percentages or 
-    // simply let the CSS handle the layout if rewritten.
-
-    // BUT, the CSS for "extended" still expects absolute positioning for keys? 
-    // We need to change the CSS method if we want perfect "fit to screen" without horizontal scroll.
-    // The Quickest fix for "fit to screen" with 14 white keys is to use percentage based left positions.
-
-    // 14 White keys total (C4...B4, C5...B5) -> 7 * 2 = 14 keys.
-    const TOTAL_WHITE_KEYS = 14;
-    const WHITE_WIDTH_PERCENT = 100 / TOTAL_WHITE_KEYS; // ~7.14%
-
-    let whiteCount = 0;
-    for (let i = 0; i < index; i++) {
-        if (allKeys[i].type === 'white') whiteCount++;
-    }
-
-    const leftPosPercent = whiteCount * WHITE_WIDTH_PERCENT;
-
-    // For Black Key: It sits on the border of (N) and (N+1) white key.
-    // usually shifted roughly 2/3 of a white key width.
-    // Width of black key is usually 2/3 of white key.
-    // Let's approximate: Left = (whiteCount * W) - (BlackW / 2). 
-    // But white keys are continuous. 
-    // Correct visual logic: C# is between C and D. 
-    // C is at index 0 (white). D is at index 1 (white).
-    // so C# starts at approx (1 * W) - (BlackW/2).
-
-    // Let's refine:
-    // If Key is White: Left = whiteCount * WIDTH.
-    // If Key is Black: It comes AFTER the white key 'whiteCount'. 
-    // Wait, 'whiteCount' calculated above includes ALL previous keys.
-    // If current is Black, it corresponds to the gap after the PREVIOUS white key.
-    // So 'whiteCount' is exactly the number of white keys before this black key.
-    // Position should be: (whiteCount * W) - (BlackW / 2).
-
-    const showDot = isCurrent || isFuture;
-    const dotClass = isCurrent ? 'current' : '';
-
-    return (
-        <button
-            className={`key ${k.type} ${isCurrent ? 'active-hint' : ''}`}
-            // Use inline style for position to support variable width
-            style={{
-                left: k.type === 'white' ? `${leftPosPercent}%` : `calc(${leftPosPercent}% - 2%)`,
-                width: k.type === 'white' ? `${WHITE_WIDTH_PERCENT}%` : '4%', // Black key approx 4%
-            }}
-            // REMOVED onTouchStart default behavior that might slide. 
-            // We keep onTouchStart but typically we want to prevent default if it causes scrolling.
-            // "gạt tay" issue: if they drag across keys, we might WANT it to NOT play 
-            // if the user says "tự chạy". Or maybe they mean it plays MULTIPLE times?
-            // "Disabled glissando" usually means we strictly listen to DOWN events on specific keys.
-            onMouseDown={(e) => { e.preventDefault(); onPlay(k.note); }}
-            onTouchStart={(e) => { e.stopPropagation(); onPlay(k.note); }} // Stop propagation might help
-        // No onTouchMove or onMouseEnter to prevent "swipe" playing
-        >
-            {showDot && (
-                <div className={`dot ${dotClass}`}>
-                    {finger}
-                </div>
-            )}
-            {k.type === 'white' && <span className="note-name">{k.label}</span>}
-        </button>
-    );
-};
 
 export default TouchGame;

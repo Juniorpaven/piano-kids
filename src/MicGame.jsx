@@ -2,13 +2,17 @@ import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import './MainMenu.css'; // Re-use main menu styles
 import './TouchGame.css'; // Ensure glass-panel style is loaded for MicGame header
+import KeyComponent from './components/KeyComponent';
 import ProgressBar from './components/ProgressBar';
 import { playSound } from './utils/sound';
 import Confetti from 'react-confetti';
+import * as Tone from 'tone'; // Re-add Tone just in case
+// Note: Removed MusicStaff import as requested to remove it
 
 const MODEL_URL = 'https://cdn.jsdelivr.net/gh/ml5js/ml5-data-and-models/models/pitch-detection/crepe/';
 
 // DUPLICATE DATA for robust standalone component (or ideally move to shared file)
+// DUPLICATE DATA for robust standalone component (Verified correct order)
 const SCALES = [
   {
     id: 'C_MAJOR', name: 'Đô Trưởng (C)', root: 'C', color: '#ef5350',
@@ -55,6 +59,26 @@ function MicGame({ onBack }) {
   const [status, setStatus] = useState('');
   const [detectedNote, setDetectedNote] = useState('-');
   const [showConfetti, setShowConfetti] = useState(false);
+
+  // GENERATE KEYS (Copy from TouchGame for consistency C3-B4)
+  const NOTES_CHROMATIC_KEYS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const pianoKeys = React.useMemo(() => {
+    let keys = [];
+    const octaves = [3, 4];
+    octaves.forEach(oct => {
+      NOTES_CHROMATIC_KEYS.forEach(n => {
+        const type = n.includes('#') ? 'black' : 'white';
+        let label = n;
+        if (type === 'white') {
+          if (n === 'C') label = 'Đô'; if (n === 'D') label = 'Rê'; if (n === 'E') label = 'Mi';
+          if (n === 'F') label = 'Fa'; if (n === 'G') label = 'Sol'; if (n === 'A') label = 'La';
+          if (n === 'B') label = 'Si';
+        }
+        keys.push({ note: `${n}${oct}`, label: type === 'white' ? label : null, type });
+      });
+    });
+    return keys;
+  }, []);
 
   // Audio Refs
   const audioContextRef = useRef(null);
@@ -178,66 +202,88 @@ function MicGame({ onBack }) {
   }
 
   // PLAYING STATE
-  const targetNote = currentScale.notes[stepIndex];
-  const progress = (stepIndex / currentScale.notes.length) * 100;
+  const targetNote = currentScale.notes[stepIndex]; // e.g. "C"
+  // We need to map targetNote to a specific key? 
+  // For simplicitly, let's say "C" maps to "C3" or "C4" based on the step logic?
+  // Current Scale defines Notes like ["C", "D"...]. It doesn't define Octave strictly in the array for MicGame yet.
+  // But visually, we should highlight ALL "C" keys or just one?
+  // Let's highlight ALL matching notes for simplicity so kid can play any octave.
 
   // PLAYING STATE RENDER
   return (
-    <div className="app-main-menu" style={{ background: '#2E7D32', height: '100dvh', justifyContent: 'center' }}>
+    <div className="touch-game-fullscreen" style={{ background: '#2E7D32' }}>
       {showConfetti && <Confetti recycle={false} numberOfPieces={300} />}
 
-      <div className="glass-panel" style={{ width: '95%', margin: '0 auto', top: '10px', position: 'absolute', borderRadius: '15px' }}>
+      <div className="glass-panel" style={{
+        top: 'max(20px, env(safe-area-inset-top))',
+        paddingLeft: 'max(15px, env(safe-area-inset-left))',
+        paddingRight: 'max(15px, env(safe-area-inset-right))'
+      }}>
         <button className="btn-menu-back" onClick={() => setGameState('MENU')}>
           <span style={{ fontSize: '1.5rem' }}>🔙</span>
-          <span>Chọn Bài</span>
         </button>
-        <div style={{ flex: 1, textAlign: 'center', color: 'white', fontWeight: 'bold', fontSize: '1.2rem' }}>
-          Bài: {currentScale.name}
+
+        <div className="status-bar compacted">
+          <div className="info-grid">
+            <div className="info-row title-row">
+              <span>Bài: {currentScale.name}</span>
+            </div>
+            <div className="info-row prompt-row">
+              <span>Hãy đánh nốt:</span>
+              <strong style={{ fontSize: '1.5rem', color: '#FFEB3B', marginLeft: '10px' }}>{targetNote}</strong>
+              <span style={{ marginLeft: 'auto', fontSize: '0.9rem', color: '#aaa' }}>
+                Nghe thấy: <span style={{ color: 'white', fontWeight: 'bold' }}>{detectedNote}</span>
+              </span>
+            </div>
+          </div>
         </div>
-        {/* Placeholder for symmetry or future button */}
-        <div style={{ width: '60px' }}></div>
       </div>
 
-      {/* Add padding-top to body container so content below doesn't hide behind glass panel */}
-      <div style={{ marginTop: '80px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-
-        {gameState === 'WIN' ? (
-          <div className="intro fade-in" style={{ background: 'rgba(255,255,255,0.9)', borderRadius: '20px', padding: '20px', margin: '20px' }}>
-            <h1 style={{ color: '#4CAF50' }}>🎉 THÀNH CÔNG! 🎉</h1>
-            <p>Bé đã đánh tuyệt vời!</p>
-            <button className="button-primary" onClick={() => setGameState('MENU')}>Chọn Bài Khác ➡️</button>
-            <button className="button-primary" style={{ marginTop: '10px', background: '#2196F3' }} onClick={() => { setStepIndex(0); setGameState('LISTENING'); setShowConfetti(false); }}>Chơi Lại 🔄</button>
+      {gameState === 'WIN' ? (
+        <div className="intro fade-in" style={{
+          position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+          background: 'rgba(255,255,255,0.95)', borderRadius: '20px', padding: '30px',
+          textAlign: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', zIndex: 100
+        }}>
+          <h1 style={{ color: '#4CAF50', margin: '0 0 10px 0' }}>🎉 THÀNH CÔNG! 🎉</h1>
+          <p style={{ fontSize: '1.2rem' }}>Bé đã hoàn thành bài nhạc!</p>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '20px', justifyContent: 'center' }}>
+            <button className="button-primary" onClick={() => setGameState('MENU')}>Chọn Bài Khác</button>
+            <button className="button-primary" style={{ background: '#2196F3' }} onClick={() => { setStepIndex(0); setGameState('LISTENING'); setShowConfetti(false); }}>Chơi Lại</button>
           </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '20px', width: '100%' }}>
+        </div>
+      ) : (
+        <div className="piano-scroll-container">
+          <div className="piano-keyboard extended">
+            {pianoKeys.map((k, i) => {
+              // Highlight logic
+              // 1. Is Limit Hint? (Target Note)
+              // k.note is "C3". targetNote is "C". 
+              // Check if k.note starts with targetNote and is followed by number
+              // But beware C# matching C.
+              const keyNoteName = k.note.replace(/[0-9]/g, '');
+              const isTarget = keyNoteName === targetNote;
 
-            {/* BIG TARGET DISPLAY */}
-            <div style={{
-              width: '200px', height: '200px', background: 'white', borderRadius: '50%',
-              display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.3)', border: '8px solid #FFEB3B',
-              animation: 'popIn 0.5s'
-            }}>
-              <span style={{ fontSize: '1.5rem', color: '#888' }}>Hãy đánh nốt:</span>
-              <span style={{ fontSize: '5rem', fontWeight: 'bold', color: '#333' }}>{targetNote}</span>
-            </div>
+              // 2. Is Played/Detected?
+              const isDetected = keyNoteName === detectedNote;
 
-            {/* Detected Feedback */}
-            <div style={{
-              marginTop: '30px', padding: '10px 30px', background: 'rgba(0,0,0,0.5)',
-              borderRadius: '30px', color: 'white', fontSize: '1.2rem'
-            }}>
-              Đàn của bé đang kêu: <strong style={{ color: '#4CAF50', fontSize: '1.5rem' }}>{detectedNote}</strong>
-            </div>
-
-            <div style={{ width: '80%', height: '20px', background: 'rgba(255,255,255,0.2)', borderRadius: '10px', marginTop: '30px', overflow: 'hidden' }}>
-              <div style={{ width: `${progress}%`, height: '100%', background: '#8BC34A', transition: 'width 0.3s' }}></div>
-            </div>
-
-            <p style={{ color: 'rgba(255,255,255,0.7)', marginTop: '10px' }}>Dùng đàn Organ hoặc Piano thật bên ngoài nhé!</p>
+              return (
+                <KeyComponent
+                  key={`${k.note}-${i}`}
+                  k={k}
+                  index={i}
+                  isCurrent={isTarget} // Show green dot on target
+                  isPlayed={isDetected} // Highlight detected note
+                  isFuture={false}
+                  finger={isTarget ? '?' : null} // Maybe '?' or just dot
+                  onPlay={() => { }} // No touch play
+                  allKeys={pianoKeys}
+                />
+              );
+            })}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

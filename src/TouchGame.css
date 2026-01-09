@@ -406,3 +406,16 @@
     transform: scale(1);
   }
 }
+
+/* Active Pressed State (e.g. from Mic or Touch) */
+.key.white.active-pressed {
+  background: linear-gradient(to bottom, #fff 0%, #42A5F5 100%) !important;
+  box-shadow: inset 0px -5px 10px rgba(0, 0, 0, 0.2);
+  transform: translateY(2px) scale(0.98);
+}
+
+.key.black.active-pressed {
+  background: linear-gradient(to bottom, #444 0%, #1565C0 100%) !important;
+  box-shadow: inset 0px -2px 5px rgba(0, 0, 0, 0.5);
+  transform: translateY(2px) scale(0.98);
+}
