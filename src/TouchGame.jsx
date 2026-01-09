@@ -288,40 +288,46 @@ function TouchGame({ onBack }) {
             <div className="glass-panel">
                 <button className="btn-menu-back" onClick={() => setView('SELECTION')}>
                     <span style={{ fontSize: '1.5rem' }}>🏠</span>
-                    <span>Menu</span>
                 </button>
-                <div className="status-bar">
-                    <div style={{ color: 'white', fontWeight: 'bold', fontSize: '1.2rem', marginBottom: '5px' }}>
-                        {gameStatus === 'WIN' ? '🎉' : `Bài: ${currentScale?.name}`}
-                    </div>
-                    <div className="progress-track">
-                        <div className="progress-fill" style={{ width: `${progressPercent}%` }}></div>
-                    </div>
+
+                {/* Combined Status & Prompt Area */}
+                <div className="status-bar compacted">
+                    {gameStatus === 'WIN' ? (
+                        <div className="win-message">🎉 HOÀN THÀNH +5 XU!</div>
+                    ) : (
+                        <div className="info-grid">
+                            <div className="info-row title-row">
+                                <span>Bài: {currentScale?.name}</span>
+                                <div className="progress-track tiny">
+                                    <div className="progress-fill" style={{ width: `${progressPercent}%` }}></div>
+                                </div>
+                            </div>
+
+                            {/* NEXT NOTE INDICATOR - NOW IN HEADER */}
+                            <div className="info-row prompt-row">
+                                {gameStatus === 'DEMO' ? (
+                                    <span style={{ color: '#FF9800' }}>▶ Đang nghe mẫu... (nhìn nốt nhé)</span>
+                                ) : (
+                                    <>
+                                        <span>Tiếp theo:</span>
+                                        <span className="next-note-target-box">{currentTarget.note?.replace(/[0-9]/, '')}</span>
+                                        <span className="finger-box">Ngón: <strong>{currentTarget.finger}</strong></span>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                    {gameStatus === 'WIN' && (
+                        <button className="btn-challenge-small" onClick={() => { setStepIndex(0); setGameStatus('PLAYING'); setShowConfetti(false); }}>🔄 Chơi Lại</button>
+                    )}
                 </div>
+
                 <button className={`btn-demo ${gameStatus === 'DEMO' ? 'active' : ''}`} disabled={gameStatus === 'DEMO'} onClick={playDemo}>
-                    {gameStatus === 'DEMO' ? '⏹ Đang chạy' : '▶ Nghe Mẫu'}
+                    {gameStatus === 'DEMO' ? '⏹' : '▶ Mẫu'}
                 </button>
             </div>
 
-            <div className="prompt-area">
-                {gameStatus === 'WIN' ? (
-                    <button className="btn-challenge" onClick={() => { setStepIndex(0); setGameStatus('PLAYING'); setShowConfetti(false); }}>Chơi Lại 🔄</button>
-                ) : (
-                    <div className="next-note-bubble" style={{ borderColor: gameStatus === 'DEMO' ? '#FFEB3B' : '#4D96FF' }}>
-                        {gameStatus === 'DEMO' ? (
-                            <>
-                                Đang chạy mẫu...
-                                <div className="finger-hint">Chú ý nút nhé!</div>
-                            </>
-                        ) : (
-                            <>
-                                Tiếp theo: <span className="next-note-target">{currentTarget.note?.replace(/[0-9]/, '')}</span>
-                                <div className="finger-hint">Ngón số: <strong>{currentTarget.finger}</strong></div>
-                            </>
-                        )}
-                    </div>
-                )}
-            </div>
+            {/* Prompt Area Removed to save space */}
 
             <div className="piano-scroll-container">
                 <div className="piano-keyboard extended">
