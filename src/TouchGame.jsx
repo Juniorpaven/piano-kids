@@ -123,10 +123,36 @@ function TouchGame({ onBack }) {
     useEffect(() => {
         const sampler = new Tone.Sampler({
             urls: {
+                "A0": "A0.mp3",
+                "C1": "C1.mp3",
+                "D#1": "Ds1.mp3",
+                "F#1": "Fs1.mp3",
+                "A1": "A1.mp3",
+                "C2": "C2.mp3",
+                "D#2": "Ds2.mp3",
+                "F#2": "Fs2.mp3",
+                "A2": "A2.mp3",
+                "C3": "C3.mp3",
+                "D#3": "Ds3.mp3",
+                "F#3": "Fs3.mp3",
+                "A3": "A3.mp3",
                 "C4": "C4.mp3",
                 "D#4": "Ds4.mp3",
                 "F#4": "Fs4.mp3",
                 "A4": "A4.mp3",
+                "C5": "C5.mp3",
+                "D#5": "Ds5.mp3",
+                "F#5": "Fs5.mp3",
+                "A5": "A5.mp3",
+                "C6": "C6.mp3",
+                "D#6": "Ds6.mp3",
+                "F#6": "Fs6.mp3",
+                "A6": "A6.mp3",
+                "C7": "C7.mp3",
+                "D#7": "Ds7.mp3",
+                "F#7": "Fs7.mp3",
+                "A7": "A7.mp3",
+                "C8": "C8.mp3"
             },
             release: 1,
             baseUrl: "https://tonejs.github.io/audio/salamander/",
@@ -146,11 +172,30 @@ function TouchGame({ onBack }) {
         const notes = currentScale.notes;
         const fingers = currentScale.fingering[handMode];
         let currentOctave = baseOctave;
+
+        // Fix: Explicitly handle octave wrap for B->C transition if root is B, etc
+        // The previous logic relying on index < lastIndex is generally okay for ascending scales 
+        // starting on C. But for B Major (B, C#, D#...), B is index 11. C# is index 1.
+        // 1 < 11, so octave increments. This is correct.
+        // BUT, what if the scale is C Major? C, D, E... Indices: 0, 2, 4... No increment.
+        // So C3, D3, E3... Correct.
+
+        // Wait, why did user say C->D?
+        // Maybe the KEYBOARD LABELS are wrong? 
+        // Let's look at key generation again in next block.
+
         let lastNoteIdx = -1;
 
         const ascNotes = [];
         notes.forEach((nName, i) => {
             const nIdx = NOTES_CHROMATIC.indexOf(nName.includes('#') ? nName : nName.replace(/[0-9]/g, ''));
+
+            // Special case logic: If it's the very first note, and it's NOT C, 
+            // check if we should start on next octave? 
+            // No, user requested C3-B4. So if Scale is B Major, it starts on B3.
+            // Then C#4, D#4...
+            // If Scale is C Major, C3.
+
             if (lastNoteIdx !== -1 && nIdx < lastNoteIdx) { currentOctave++; }
             lastNoteIdx = nIdx;
             ascNotes.push({ note: `${nName}${currentOctave}`, finger: fingers[i] });
@@ -215,16 +260,28 @@ function TouchGame({ onBack }) {
     const playDemo = async () => {
         if (Tone.context.state !== 'running') await Tone.start();
 
-        if (gameStatus === 'DEMO') return;
+        if (gameStatus === 'DEMO') {
+            // Allow stop
+            setGameStatus('PLAYING');
+            setDemoIndex(-1);
+            return;
+        }
 
         setGameStatus('DEMO');
         setDemoIndex(-1);
+
+        // Wait a bit for state to settle
+        await new Promise(r => setTimeout(r, 100));
+
         const now = Tone.now();
         const sequence = gameSequence.current;
 
         sequence.forEach((item, i) => {
-            // Audio
-            if (synth && isLoaded) synth.triggerAttackRelease(item.note, "8n", now + i * 0.5);
+            const time = now + (i * 0.5);
+            // Audio - Check loaded
+            if (synth && isLoaded) {
+                synth.triggerAttackRelease(item.note, "8n", time);
+            }
 
             // Visual: Update Index
             setTimeout(() => {
