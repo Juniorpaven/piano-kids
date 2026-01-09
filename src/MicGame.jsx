@@ -202,7 +202,16 @@ function MicGame({ onBack }) {
   }
 
   // PLAYING STATE
-  const targetNote = currentScale.notes[stepIndex]; // e.g. "C"
+  const targetNote = currentScale.notes[stepIndex];  // ORITENTATION LOGIC
+  const [isPortrait, setIsPortrait] = useState(window.innerHeight > window.innerWidth);
+  const [forceRotate, setForceRotate] = useState(false);
+
+  useEffect(() => {
+    const checkOrientation = () => setIsPortrait(window.innerHeight > window.innerWidth);
+    window.addEventListener('resize', checkOrientation);
+    return () => window.removeEventListener('resize', checkOrientation);
+  }, []);
+
   // We need to map targetNote to a specific key? 
   // For simplicitly, let's say "C" maps to "C3" or "C4" based on the step logic?
   // Current Scale defines Notes like ["C", "D"...]. It doesn't define Octave strictly in the array for MicGame yet.
@@ -211,8 +220,20 @@ function MicGame({ onBack }) {
 
   // PLAYING STATE RENDER
   return (
-    <div className="touch-game-fullscreen" style={{ background: '#2E7D32' }}>
+    <div className={`touch-game-fullscreen ${forceRotate ? 'forced-landscape' : ''}`} style={{ background: '#2E7D32' }}>
       {showConfetti && <Confetti recycle={false} numberOfPieces={300} />}
+
+      {/* Warning Overlay controlled by React */}
+      {(isPortrait && !forceRotate) && (
+        <div className="portrait-warning" style={{ display: 'flex' }}>
+          <div className="rotate-icon">📱➡️</div>
+          <h2>Vui lòng xoay ngang điện thoại!</h2>
+          <p>Hoặc ấn nút dưới để xoay ép buộc.</p>
+          <button className="btn-force-rotate" onClick={() => setForceRotate(true)}>
+            🔄 Xoay Ngang Ngay
+          </button>
+        </div>
+      )}
 
       <div className="glass-panel" style={{
         top: 'max(20px, env(safe-area-inset-top))',
