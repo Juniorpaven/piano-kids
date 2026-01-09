@@ -16,10 +16,12 @@
 /* ... existing code ... */
 
 /* PIANO CONTAINER - Flex based for "Full Fit" */
+/* PIANO CONTAINER - Flex based for "Full Fit" */
 .piano-scroll-container {
   flex: 1;
   /* Grow to fill remaining space */
-  width: 100vw;
+  width: 100%;
+  /* Use 100% of parent, NOT 100vw which is wrong in rotated mode */
   min-height: 0;
   overflow: hidden;
   background: #111;
@@ -40,8 +42,8 @@
   position: relative;
   height: 100%;
   /* Fill container */
-  width: 100vw;
-  /* Force exact fit */
+  width: 100%;
+  /* Use 100% of parent */
   margin: 0;
   padding: 0;
   background: transparent;
