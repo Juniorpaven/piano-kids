@@ -95,11 +95,11 @@ function TouchGame({ onBack }) {
 
     const gameSequence = useRef([]);
 
-    // FIXED: Generate exactly 2 octaves (C4 to B5) just for the demo range
-    // Adjust logic to fit 'C to B' twice => C4...B4 and C5...B5.
+    // FIXED: Generate exactly 2 octaves (C3 to B4)
+    // User requested "tu not do den si 2 lan" starting from the first set.
     const pianoKeys = (() => {
         let keys = [];
-        const octaves = [4, 5]; // Exactly 2 Octaves
+        const octaves = [3, 4]; // Octaves 3 and 4 -> C3...B3, C4...B4
         octaves.forEach(oct => {
             NOTES_CHROMATIC.forEach(n => {
                 const type = n.includes('#') ? 'black' : 'white';
@@ -116,8 +116,6 @@ function TouchGame({ onBack }) {
                 keys.push({ note: `${n}${oct}`, label: type === 'white' ? label : null, type });
             });
         });
-        // We stop at B5 to have exactly 2 full sets: C4-B4, C5-B5.
-        // User requested "tu not do den si 2 lan" -> C to B twice.
         return keys;
     })();
 
@@ -143,7 +141,8 @@ function TouchGame({ onBack }) {
 
     const getGameSequence = () => {
         if (!currentScale) return [];
-        const baseOctave = handMode === 'RIGHT' ? 4 : 4; // Keep in visible range 4-5
+        // Base Octave 3 to match the C3-B4 keyboard
+        const baseOctave = 3;
         const notes = currentScale.notes;
         const fingers = currentScale.fingering[handMode];
         let currentOctave = baseOctave;
