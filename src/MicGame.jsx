@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import './MainMenu.css'; // Re-use main menu styles
+import './TouchGame.css'; // Ensure glass-panel style is loaded for MicGame header
 import ProgressBar from './components/ProgressBar';
 import { playSound } from './utils/sound';
 import Confetti from 'react-confetti';
@@ -180,53 +181,63 @@ function MicGame({ onBack }) {
   const targetNote = currentScale.notes[stepIndex];
   const progress = (stepIndex / currentScale.notes.length) * 100;
 
+  // PLAYING STATE RENDER
   return (
     <div className="app-main-menu" style={{ background: '#2E7D32', height: '100dvh', justifyContent: 'center' }}>
       {showConfetti && <Confetti recycle={false} numberOfPieces={300} />}
 
-      <div className="glass-panel" style={{ width: '90vw', borderRadius: '20px' }}>
-        <button className="btn-small" onClick={() => setGameState('MENU')}>🔙 Chọn Bài</button>
-        <div style={{ flex: 1, textAlign: 'center', color: 'white' }}>
-          <h2>Bài: {currentScale.name}</h2>
+      <div className="glass-panel" style={{ width: '95%', margin: '0 auto', top: '10px', position: 'absolute', borderRadius: '15px' }}>
+        <button className="btn-menu-back" onClick={() => setGameState('MENU')}>
+          <span style={{ fontSize: '1.5rem' }}>🔙</span>
+          <span>Chọn Bài</span>
+        </button>
+        <div style={{ flex: 1, textAlign: 'center', color: 'white', fontWeight: 'bold', fontSize: '1.2rem' }}>
+          Bài: {currentScale.name}
         </div>
+        {/* Placeholder for symmetry or future button */}
+        <div style={{ width: '60px' }}></div>
       </div>
 
-      {gameState === 'WIN' ? (
-        <div className="intro fade-in" style={{ background: 'rgba(255,255,255,0.9)', borderRadius: '20px', padding: '20px', margin: '20px' }}>
-          <h1 style={{ color: '#4CAF50' }}>🎉 THÀNH CÔNG! 🎉</h1>
-          <p>Bé đã đánh tuyệt vời!</p>
-          <button className="button-primary" onClick={() => setGameState('MENU')}>Chọn Bài Khác ➡️</button>
-          <button className="button-primary" style={{ marginTop: '10px', background: '#2196F3' }} onClick={() => { setStepIndex(0); setGameState('LISTENING'); setShowConfetti(false); }}>Chơi Lại 🔄</button>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '20px', width: '100%' }}>
+      {/* Add padding-top to body container so content below doesn't hide behind glass panel */}
+      <div style={{ marginTop: '80px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 
-          {/* BIG TARGET DISPLAY */}
-          <div style={{
-            width: '200px', height: '200px', background: 'white', borderRadius: '50%',
-            display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.3)', border: '8px solid #FFEB3B',
-            animation: 'popIn 0.5s'
-          }}>
-            <span style={{ fontSize: '1.5rem', color: '#888' }}>Hãy đánh nốt:</span>
-            <span style={{ fontSize: '5rem', fontWeight: 'bold', color: '#333' }}>{targetNote}</span>
+        {gameState === 'WIN' ? (
+          <div className="intro fade-in" style={{ background: 'rgba(255,255,255,0.9)', borderRadius: '20px', padding: '20px', margin: '20px' }}>
+            <h1 style={{ color: '#4CAF50' }}>🎉 THÀNH CÔNG! 🎉</h1>
+            <p>Bé đã đánh tuyệt vời!</p>
+            <button className="button-primary" onClick={() => setGameState('MENU')}>Chọn Bài Khác ➡️</button>
+            <button className="button-primary" style={{ marginTop: '10px', background: '#2196F3' }} onClick={() => { setStepIndex(0); setGameState('LISTENING'); setShowConfetti(false); }}>Chơi Lại 🔄</button>
           </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '20px', width: '100%' }}>
 
-          {/* Detected Feedback */}
-          <div style={{
-            marginTop: '30px', padding: '10px 30px', background: 'rgba(0,0,0,0.5)',
-            borderRadius: '30px', color: 'white', fontSize: '1.2rem'
-          }}>
-            Đàn của bé đang kêu: <strong style={{ color: '#4CAF50', fontSize: '1.5rem' }}>{detectedNote}</strong>
+            {/* BIG TARGET DISPLAY */}
+            <div style={{
+              width: '200px', height: '200px', background: 'white', borderRadius: '50%',
+              display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.3)', border: '8px solid #FFEB3B',
+              animation: 'popIn 0.5s'
+            }}>
+              <span style={{ fontSize: '1.5rem', color: '#888' }}>Hãy đánh nốt:</span>
+              <span style={{ fontSize: '5rem', fontWeight: 'bold', color: '#333' }}>{targetNote}</span>
+            </div>
+
+            {/* Detected Feedback */}
+            <div style={{
+              marginTop: '30px', padding: '10px 30px', background: 'rgba(0,0,0,0.5)',
+              borderRadius: '30px', color: 'white', fontSize: '1.2rem'
+            }}>
+              Đàn của bé đang kêu: <strong style={{ color: '#4CAF50', fontSize: '1.5rem' }}>{detectedNote}</strong>
+            </div>
+
+            <div style={{ width: '80%', height: '20px', background: 'rgba(255,255,255,0.2)', borderRadius: '10px', marginTop: '30px', overflow: 'hidden' }}>
+              <div style={{ width: `${progress}%`, height: '100%', background: '#8BC34A', transition: 'width 0.3s' }}></div>
+            </div>
+
+            <p style={{ color: 'rgba(255,255,255,0.7)', marginTop: '10px' }}>Dùng đàn Organ hoặc Piano thật bên ngoài nhé!</p>
           </div>
-
-          <div style={{ width: '80%', height: '20px', background: 'rgba(255,255,255,0.2)', borderRadius: '10px', marginTop: '30px', overflow: 'hidden' }}>
-            <div style={{ width: `${progress}%`, height: '100%', background: '#8BC34A', transition: 'width 0.3s' }}></div>
-          </div>
-
-          <p style={{ color: 'rgba(255,255,255,0.7)', marginTop: '10px' }}>Dùng đàn Organ hoặc Piano thật bên ngoài nhé!</p>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
