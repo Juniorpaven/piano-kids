@@ -91,7 +91,47 @@ function TouchGame({ onBack }) {
         return () => window.removeEventListener('resize', checkOrientation);
     }, []);
 
-    const gameSequence = useRef([]);
+    // FIXED: Use useMemo to ensure sequence updates verify BEFORE render
+    // This fixes the "Off-by-one" / "Previous Scale" bug where useRef didn't trigger re-render
+    const gameSequence = React.useMemo(() => {
+        if (!currentScale) return [];
+        const notes = currentScale.notes;
+        const fingers = currentScale.fingering[handMode];
+
+        let currentOctave = 3; // Base Octave C3
+
+        // Logic: Build ascending sequence
+        const ascNotes = [];
+        let previousIndex = -1;
+
+        notes.forEach((n, i) => {
+            // Find chromatic index (0-11)
+            const nClean = n.includes('#') ? n : n.replace(/[0-9]/g, '');
+            const idx = NOTES_CHROMATIC.indexOf(nClean);
+
+            // Logic for octave shift:
+            // If current note index is LOWER than previous, we crossed B->C, so octave++
+            if (previousIndex !== -1) {
+                if (idx < previousIndex) {
+                    currentOctave++;
+                }
+            }
+            previousIndex = idx;
+
+            ascNotes.push({ note: `${nClean}${currentOctave}`, finger: fingers[i] });
+        });
+
+        console.log("Calculated Sequence for:", currentScale.id, ascNotes);
+        const descNotes = [...ascNotes].reverse();
+        return [...ascNotes, ...descNotes];
+    }, [currentScale, handMode]);
+
+    // Reset loop index when scale changes
+    useEffect(() => {
+        setStepIndex(0);
+        setGameStatus('PLAYING');
+        setDemoIndex(-1);
+    }, [currentScale, handMode]);
 
     // FIXED: Generate exactly 2 octaves (C3 to B4)
     // User requested "tu not do den si 2 lan" starting from the first set.
@@ -163,54 +203,6 @@ function TouchGame({ onBack }) {
         return () => sampler.dispose();
     }, []);
 
-    const getGameSequence = () => {
-        if (!currentScale) return [];
-        const notes = currentScale.notes;
-        const fingers = currentScale.fingering[handMode];
-
-        let currentOctave = 3; // Base Octave C3
-
-        // Logic: Build ascending sequence
-        const ascNotes = [];
-        let previousIndex = -1;
-
-        notes.forEach((n, i) => {
-            // Find chromatic index (0-11)
-            const nClean = n.includes('#') ? n : n.replace(/[0-9]/g, '');
-            const idx = NOTES_CHROMATIC.indexOf(nClean);
-
-            // Logic for octave shift:
-            // If current note index is LOWER than previous, we crossed B->C, so octave++
-            // Exception: The very first note. 
-            // If the first note is 'middle of range' and we want to ensure we start low?
-            // Actually, we just start at 3. The loop handles the rest.
-
-            if (previousIndex !== -1) {
-                if (idx < previousIndex) {
-                    currentOctave++;
-                }
-            }
-            previousIndex = idx;
-
-            ascNotes.push({ note: `${nClean}${currentOctave}`, finger: fingers[i] });
-        });
-
-        // Debug: Log the generated sequence start
-        console.log("Generated Sequence Start:", ascNotes[0]);
-
-        const descNotes = [...ascNotes].reverse();
-        return [...ascNotes, ...descNotes];
-    };
-
-    useEffect(() => {
-        if (currentScale) {
-            gameSequence.current = getGameSequence();
-            setStepIndex(0);
-            setGameStatus('PLAYING');
-            setDemoIndex(-1);
-        }
-    }, [currentScale, handMode]);
-
     const handleNotePlay = async (playedNote) => {
         // Ignore input during demo
         if (gameStatus === 'DEMO') return;
@@ -223,9 +215,9 @@ function TouchGame({ onBack }) {
         }
 
         if (view === 'PLAY' && gameStatus === 'PLAYING') {
-            const target = gameSequence.current[stepIndex];
+            const target = gameSequence[stepIndex];
             if (target && playedNote === target.note) {
-                if (stepIndex >= gameSequence.current.length - 1) {
+                if (stepIndex >= gameSequence.length - 1) {
                     setGameStatus('WIN');
                     setShowConfetti(true);
                     updateCoins(5);
@@ -270,7 +262,7 @@ function TouchGame({ onBack }) {
         await new Promise(r => setTimeout(r, 100));
 
         const now = Tone.now();
-        const sequence = gameSequence.current;
+        const sequence = gameSequence;
 
         sequence.forEach((item, i) => {
             const time = now + (i * 0.5);
@@ -319,8 +311,8 @@ function TouchGame({ onBack }) {
         );
     }
 
-    const currentTarget = gameSequence.current[stepIndex] || {};
-    const progressPercent = Math.min(100, (stepIndex / gameSequence.current.length) * 100);
+    const currentTarget = gameSequence[stepIndex] || {};
+    const progressPercent = Math.min(100, (stepIndex / gameSequence.length) * 100);
 
     return (
         <div className={`touch-game-fullscreen ${forceRotate ? 'forced-landscape' : ''}`}>
@@ -392,7 +384,7 @@ function TouchGame({ onBack }) {
 
                         // LOGIC: DEMO MODE (Use demoIndex)
                         if (gameStatus === 'DEMO') {
-                            const target = gameSequence.current[demoIndex];
+                            const target = gameSequence[demoIndex];
                             // 1. Current Note
                             if (target && k.note === target.note) {
                                 isCurrent = true;
@@ -400,7 +392,7 @@ function TouchGame({ onBack }) {
                             }
                             // 2. Future Notes (Roadmap) - RESTORED
                             else {
-                                const futureStep = gameSequence.current.slice(demoIndex + 1).find(item => item.note === k.note);
+                                const futureStep = gameSequence.slice(demoIndex + 1).find(item => item.note === k.note);
                                 if (futureStep) {
                                     isFuture = true;
                                     fingerToDisplay = futureStep.finger;
@@ -409,13 +401,13 @@ function TouchGame({ onBack }) {
                         }
                         // LOGIC: PLAYING MODE (Use stepIndex)
                         else if (gameStatus === 'PLAYING') {
-                            const target = gameSequence.current[stepIndex];
+                            const target = gameSequence[stepIndex];
                             if (target && k.note === target.note) {
                                 isCurrent = true;
                                 fingerToDisplay = target.finger;
                             }
                             else {
-                                const futureStep = gameSequence.current.slice(stepIndex + 1).find(item => item.note === k.note);
+                                const futureStep = gameSequence.slice(stepIndex + 1).find(item => item.note === k.note);
                                 if (futureStep) {
                                     isFuture = true;
                                     fingerToDisplay = futureStep.finger;
