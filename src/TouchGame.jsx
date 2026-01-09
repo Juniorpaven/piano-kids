@@ -301,7 +301,14 @@ function TouchGame({ onBack }) {
 
                 <div className="chord-grid">
                     {SCALES.map(s => (
-                        <div key={s.id} className="chord-card" onClick={() => { setCurrentScale(s); setView('PLAY'); }}>
+                        <div key={s.id} className="chord-card" onClick={() => {
+                            setCurrentScale(s);
+                            setStepIndex(0);
+                            setGameStatus('PLAYING');
+                            setDemoIndex(-1);
+                            setShowConfetti(false);
+                            setView('PLAY');
+                        }}>
                             <div className="chord-title" style={{ background: s.color }}>{s.name}</div>
                             <div className="chord-notes">Luyện: {s.notes.join(' - ')}</div>
                         </div>
