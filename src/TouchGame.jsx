@@ -324,7 +324,7 @@ function TouchGame({ onBack }) {
 
     return (
         <div className={`touch-game-fullscreen ${forceRotate ? 'forced-landscape' : ''}`}>
-            {showConfetti && <Confetti recycle={false} numberOfPieces={300} />}
+            {showConfetti && <Confetti recycle={false} numberOfPieces={800} gravity={0.2} />}
 
             {/* Warning Overlay controlled by React */}
             {(isPortrait && !forceRotate) && (

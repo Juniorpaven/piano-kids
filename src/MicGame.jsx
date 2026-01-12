@@ -296,10 +296,10 @@ function MicGame({ onBack }) {
                   k={k}
                   index={i}
                   isCurrent={isTarget} // Show green dot on target
-                  isPlayed={isDetected} // Highlight detected note
+                  // Removed isPlayed blue highlight to reduce confusion
                   isFuture={false}
-                  finger={isTarget ? '?' : null} // Maybe '?' or just dot
-                  onPlay={() => { }} // No touch play
+                  finger={isTarget ? '?' : null}
+                  onPlay={() => { }}
                   allKeys={pianoKeys}
                 />
               );

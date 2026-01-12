@@ -91,6 +91,7 @@ function ForestGame({ onBack }) {
                     if (window.ml5) {
                         pitchRef.current = window.ml5.pitchDetection(MODEL_URL, audioContextRef.current, stream, () => {
                             console.log('Model Loaded');
+                            if (isListeningRef.current) return;
                             isListeningRef.current = true;
                             detectPitchLoop();
                         });
