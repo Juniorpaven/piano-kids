@@ -132,6 +132,16 @@ function ForestGame({ onBack }) {
         });
     };
 
+    // --- ROTATION CHECK (Moved to top level to fix React Error #310) ---
+    const [isPortrait, setIsPortrait] = useState(window.innerHeight > window.innerWidth);
+    const [forceRotate, setForceRotate] = useState(false);
+
+    useEffect(() => {
+        const checkOrientation = () => setIsPortrait(window.innerHeight > window.innerWidth);
+        window.addEventListener('resize', checkOrientation);
+        return () => window.removeEventListener('resize', checkOrientation);
+    }, []);
+
     // --- GAMEPLAY LOGIC ---
 
     // Debounce logic for note detection to avoid flickering
@@ -249,16 +259,6 @@ function ForestGame({ onBack }) {
             </div>
         );
     }
-
-    // --- ROTATION CHECK ---
-    const [isPortrait, setIsPortrait] = useState(window.innerHeight > window.innerWidth);
-    const [forceRotate, setForceRotate] = useState(false);
-
-    useEffect(() => {
-        const checkOrientation = () => setIsPortrait(window.innerHeight > window.innerWidth);
-        window.addEventListener('resize', checkOrientation);
-        return () => window.removeEventListener('resize', checkOrientation);
-    }, []);
 
     // GAME SCREEN with Rotation Check
     return (
