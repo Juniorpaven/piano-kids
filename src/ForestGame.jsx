@@ -249,9 +249,31 @@ function ForestGame({ onBack }) {
         );
     }
 
-    // GAME SCREEN
+    // --- ROTATION CHECK ---
+    const [isPortrait, setIsPortrait] = useState(window.innerHeight > window.innerWidth);
+    const [forceRotate, setForceRotate] = useState(false);
+
+    useEffect(() => {
+        const checkOrientation = () => setIsPortrait(window.innerHeight > window.innerWidth);
+        window.addEventListener('resize', checkOrientation);
+        return () => window.removeEventListener('resize', checkOrientation);
+    }, []);
+
+    // GAME SCREEN with Rotation Check
     return (
-        <div className="forest-container">
+        <div className={`forest-container ${forceRotate ? 'forced-landscape' : ''}`}>
+            {/* Warning Overlay controlled by React */}
+            {(isPortrait && !forceRotate) && (
+                <div className="portrait-warning" style={{ display: 'flex', position: 'fixed', zIndex: 999 }}>
+                    <div className="rotate-icon">📱➡️</div>
+                    <h2>Vui lòng xoay ngang điện thoại!</h2>
+                    <p>Hoặc ấn nút dưới để xoay ép buộc.</p>
+                    <button className="btn-force-rotate" onClick={() => setForceRotate(true)}>
+                        🔄 Xoay Ngang Ngay
+                    </button>
+                </div>
+            )}
+
             {gameState === 'WIN' && <Confetti recycle={true} />}
 
             {/* BACKGROUND LAYERS */}
