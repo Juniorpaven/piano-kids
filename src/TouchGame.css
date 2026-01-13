@@ -112,13 +112,19 @@ button,
 }
 
 .piano-keyboard.extended {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
   background: transparent;
   display: flex;
+  z-index: 50;
+  /* Ensure it is above falling notes but below overlays */
 }
 
 /* KEY STYLES */

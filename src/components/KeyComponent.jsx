@@ -12,9 +12,9 @@ const NOTE_CONFIG = {
 };
 
 const KeyComponent = ({ k, index, isCurrent, isFuture, isPlayed, finger, onPlay, allKeys }) => {
-    // 14 White keys total
-    const TOTAL_WHITE_KEYS = 14;
-    const WHITE_WIDTH_PERCENT = 100 / TOTAL_WHITE_KEYS;
+    // Dynamic width calculation based on total white keys found in the map
+    const totalWhiteKeys = allKeys.filter(k => k.type === 'white').length;
+    const WHITE_WIDTH_PERCENT = 100 / totalWhiteKeys;
 
     let whiteCount = 0;
     for (let i = 0; i < index; i++) {
