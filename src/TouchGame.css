@@ -212,55 +212,36 @@
   }
 }
 
-/* WHITE KEYS - Height 100% of container */
+/* WHITE KEYS */
 .key.white {
-  /* Width handled by inline style for responsiveness */
   height: 100%;
-  /* Full height */
-  background: white;
-  border: 1px solid #999;
-  border-top: none;
+  border: none;
+  /* Removed default borders */
   z-index: 10;
-  color: #333;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding-bottom: 2%;
-  /* Responsive padding */
-  font-weight: 800;
-  font-size: 1.1rem;
-  border-bottom-left-radius: 8px;
-  border-bottom-right-radius: 8px;
+  /* Jelly styles handled inline for dynamic features */
 }
 
 .key.white.active-hint {
-  background: #f0fff4;
+  filter: brightness(1.1);
+  box-shadow: 0 0 15px #FFEB3B !important;
 }
 
 .key.white:active {
-  background: #ddd;
-  transform: scale(0.98);
-  transform-origin: top;
+  /* Animation handled inline */
 }
 
-/* BLACK KEYS - Percentage Height */
+/* BLACK KEYS */
 .key.black {
-  /* Width handled by inline style */
   height: 60%;
-  /* Relative to container */
-  background: linear-gradient(to bottom, #333, #000);
-  border: 1px solid #000;
-  border-bottom: 4px solid #000;
-  border-bottom-left-radius: 5px;
-  border-bottom-right-radius: 5px;
+  border: none;
   z-index: 20;
-  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4);
 }
 
 .key.black:active {
-  background: #222;
-  transform: scale(0.98);
-  transform-origin: top;
+  /* Animation handled inline */
 }
 
 /* DOTS */

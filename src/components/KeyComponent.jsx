@@ -37,14 +37,18 @@ const KeyComponent = ({ k, index, isCurrent, isFuture, isPlayed, finger, onPlay,
             className={`key ${k.type} ${keyStateClass}`}
             style={{
                 left: isWhite ? `${leftPosPercent}%` : `calc(${leftPosPercent}% - 2%)`,
-                width: isWhite ? `${WHITE_WIDTH_PERCENT}%` : '4%',
-                // RAINBOW COLOR (Only for bottom border or background hint?)
-                // User wants "Rainbow Method". Let's color the bottom 15% of the key.
-                background: isWhite
-                    ? `linear-gradient(to bottom, white 85%, ${config.color || '#ddd'} 100%)`
-                    : '#333',
-                borderBottom: isWhite ? `5px solid ${config.color || '#ccc'}` : 'none',
-                boxShadow: isWhite ? '0 5px 5px rgba(0,0,0,0.1)' : '0 2px 5px rgba(0,0,0,0.3)'
+                width: isWhite ? `${WHITE_WIDTH_PERCENT}%` : '5.5%', // Slightly wider black keys for 'fat' look
+                // JELLY STYLING: Creamy white for white keys, Dark Graphite for black
+                background: isWhite ? '#FFF3E0' : 'linear-gradient(180deg, #424242 0%, #212121 100%)',
+                // Rainbow color only on bottom border for white keys
+                borderBottom: isWhite ? `6px solid ${config.color || '#ccc'}` : 'none',
+                borderRadius: isWhite ? '0 0 15px 15px' : '0 0 10px 10px',
+                // Jelly Shadows
+                boxShadow: isWhite
+                    ? 'inset 0 -10px 0 rgba(0,0,0,0.05), 0 5px 0 rgba(0,0,0,0.1)'
+                    : 'inset 0 -5px 0 rgba(255,255,255,0.1), 2px 2px 4px rgba(0,0,0,0.4)',
+                transform: isPlayed ? 'scale(0.95) translateY(2px)' : 'none',
+                zIndex: isWhite ? 1 : 10
             }}
             onMouseDown={(e) => { e.preventDefault(); onPlay && onPlay(k.note); }}
             onTouchStart={(e) => { e.stopPropagation(); onPlay && onPlay(k.note); }}
@@ -60,16 +64,19 @@ const KeyComponent = ({ k, index, isCurrent, isFuture, isPlayed, finger, onPlay,
                 </div>
             )}
 
-            {/* ANIMAL & NOTE LABEL */}
+            {/* ANIMAL & NOTE LABEL (Only for White Keys) */}
             {isWhite && (
                 <div className="key-label-container" style={{
-                    position: 'absolute', bottom: '10px', width: '100%',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center'
+                    position: 'absolute', bottom: '15px', width: '100%',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'none'
                 }}>
-                    <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{config.animal}</span>
+                    <span style={{ fontSize: '2rem', marginBottom: '-5px', filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.2))' }}>
+                        {config.animal}
+                    </span>
                     <span className="note-name" style={{
-                        color: config.color, fontWeight: '900', fontSize: '1.2rem',
-                        textShadow: '1px 1px 0px rgba(0,0,0,0.1)'
+                        color: '#6D4C41', // Brown/Graphite text instead of rainbow hard to read
+                        fontWeight: '900', fontSize: '1.4rem',
+                        fontFamily: '"Comic Sans MS", cursive, sans-serif'
                     }}>
                         {k.label}
                     </span>
