@@ -338,171 +338,170 @@ function TouchGame({ onBack }) {
                 </div>
             );
         }
+
+
+        const currentTarget = gameSequence[stepIndex] || {};
+        const progressPercent = Math.min(100, (stepIndex / gameSequence.length) * 100);
+
+        return (
+            <div className={`touch-game-fullscreen ${forceRotate ? 'forced-landscape' : ''}`}>
+                <div style={{ display: 'none' }}>{/* Preload Assets */}
+                    <img src="/trophy.png" alt="" />
+                    <img src="/stickers.png" alt="" />
+                    <img src="/fireworks.png" alt="" />
+                </div>
+
+                {gameStatus === 'WIN' && <Confetti recycle={false} numberOfPieces={500} gravity={0.1} />}
+
+                {/* FALLING NOTES LAYER */}
+                {gameStatus === 'PLAYING' && (
+                    <div className="falling-notes-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 5 }}>
+                        <div className="falling-note" style={{
+                            left: `${(stepIndex / gameSequence.length) * 80 + 10}%`,
+                            animationDuration: '2s'
+                        }}>
+                            🎵
+                        </div>
+                    </div>
+                )}
+
+                <div className="touch-game-container">
+                    {/* REWARD OVERLAY (NEW STICKER POPUP) */}
+                    {gameStatus === 'WIN' && (
+                        <div className="sticker-popup-overlay">
+                            <div className="fireworks-container">
+                                <div className="firework-burst" style={{ top: '10%', left: '10%', animation: 'popIn 0.5s', opacity: 1 }}></div>
+                                <div className="firework-burst" style={{ top: '20%', right: '10%', animation: 'popIn 0.7s 0.2s', opacity: 1 }}></div>
+                                <div className="firework-burst" style={{ bottom: '30%', left: '30%', animation: 'popIn 0.6s 0.4s', opacity: 1 }}></div>
+                            </div>
+
+                            <div className="popup-content-box">
+                                <div className="popup-title-badge">LEVEL COMPLETE!</div>
+
+                                <div className="trophy-container" style={{ width: 120, height: 120, marginTop: 10, position: 'absolute', top: -60, right: -40 }}>
+                                    <img src="/trophy.png" className="trophy-img" style={{ width: '100%', height: 'auto' }} alt="Trophy" />
+                                    <div className="yay-speech-bubble">Yay!</div>
+                                </div>
+
+                                <h2 style={{ color: '#333', marginTop: 40 }}>Bé nhận được Sticker mới!</h2>
+
+                                <div className="new-sticker-glow-container">
+                                    <div className="glow-ring-back"></div>
+                                    <div className="glow-ring-front"></div>
+                                    <div style={{ width: 140, height: 140, borderRadius: '50%', overflow: 'hidden', position: 'relative', border: '4px solid white', zIndex: 10 }}>
+                                        <img src="/stickers.png" className="sticker-reveal-img" style={{ width: '200%', height: '200%', objectPosition: '0 0', margin: '-50% 0 0 -50%' }} alt="Sticker" />
+                                    </div>
+                                </div>
+
+                                <div style={{ fontSize: '1.2rem', color: '#888', fontStyle: 'italic', marginBottom: 20 }}>
+                                    "Mèo âm nhạc"
+                                </div>
+
+                                <button className="btn-collect-reward" onClick={() => { setStepIndex(0); setGameStatus('PLAYING'); setShowConfetti(false); }}>
+                                    🎁 NHẬN QUÀ!
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Warning Overlay */}
+                    {(isPortrait && !forceRotate) && (
+                        <div className="portrait-warning" style={{ display: 'flex' }}>
+                            <div className="rotate-icon">📱➡️</div>
+                            <h2>Vui lòng xoay ngang điện thoại!</h2>
+                            <button className="btn-force-rotate" onClick={() => setForceRotate(true)}>
+                                🔄 Xoay Ngang Ngay
+                            </button>
+                        </div>
+                    )}
+
+                    <div className="glass-panel">
+                        <button className="btn-menu-back" onClick={() => setView('SELECTION')}>
+                            <span style={{ fontSize: '1.5rem' }}>🏠</span>
+                        </button>
+
+                        <div className="status-bar compacted">
+                            <div className="info-grid">
+                                <div className="info-row title-row">
+                                    <span style={{ fontSize: '1.5rem', color: 'white' }}>Bài: {currentScale?.name}</span>
+                                    <div className="progress-track tiny">
+                                        <div className="progress-fill" style={{ width: `${progressPercent}%` }}></div>
+                                    </div>
+                                </div>
+
+                                <div className="info-row prompt-row">
+                                    {gameStatus === 'DEMO' ? (
+                                        <span style={{ color: '#FF9800' }}>▶ Đang nghe mẫu... (nhìn nốt nhé)</span>
+                                    ) : (
+                                        <>
+                                            <span>Tiếp theo:</span>
+                                            <span className="next-note-target-box" style={{ background: '#FFEB3B', color: '#333' }}>{currentTarget.note?.replace(/[0-9]/, '')}</span>
+                                            <span className="finger-box">Ngón: <strong>{currentTarget.finger}</strong></span>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        <button className={`btn-demo ${gameStatus === 'DEMO' ? 'active' : ''}`} disabled={gameStatus === 'DEMO'} onClick={playDemo}>
+                            {gameStatus === 'DEMO' ? '⏹' : '▶ Nghe Mẫu'}
+                        </button>
+                    </div>
+
+                    <div className="piano-scroll-container">
+                        <div className="piano-keyboard extended" style={{ background: 'transparent' }}>
+                            {pianoKeys.map((k, i) => {
+                                let fingerToDisplay = null;
+                                let isCurrent = false;
+                                let isFuture = false;
+
+                                if (gameStatus === 'DEMO') {
+                                    const target = gameSequence[demoIndex];
+                                    if (target && k.note === target.note) {
+                                        isCurrent = true;
+                                        fingerToDisplay = target.finger;
+                                    }
+                                    else {
+                                        const futureStep = gameSequence.slice(demoIndex + 1).find(item => item.note === k.note);
+                                        if (futureStep) {
+                                            isFuture = true;
+                                            fingerToDisplay = futureStep.finger;
+                                        }
+                                    }
+                                }
+                                else if (gameStatus === 'PLAYING') {
+                                    const target = gameSequence[stepIndex];
+                                    if (target && k.note === target.note) {
+                                        isCurrent = true;
+                                        fingerToDisplay = target.finger;
+                                    }
+                                    else {
+                                        const futureStep = gameSequence.slice(stepIndex + 1).find(item => item.note === k.note);
+                                        if (futureStep) {
+                                            isFuture = true;
+                                            fingerToDisplay = futureStep.finger;
+                                        }
+                                    }
+                                }
+
+                                return (
+                                    <KeyComponent
+                                        key={`${k.note}-${i}`}
+                                        k={k}
+                                        index={i}
+                                        isCurrent={isCurrent}
+                                        isFuture={isFuture}
+                                        finger={fingerToDisplay}
+                                        onPlay={handleNotePlay}
+                                        allKeys={pianoKeys}
+                                    />
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            </div>
         );
     }
 
-    const currentTarget = gameSequence[stepIndex] || {};
-    const progressPercent = Math.min(100, (stepIndex / gameSequence.length) * 100);
-
-    return (
-        <div className={`touch-game-fullscreen ${forceRotate ? 'forced-landscape' : ''}`}>
-            <div style={{ display: 'none' }}>{/* Preload Assets */}
-                <img src="/trophy.png" alt="" />
-                <img src="/stickers.png" alt="" />
-                <img src="/fireworks.png" alt="" />
-            </div>
-
-            {gameStatus === 'WIN' && <Confetti recycle={false} numberOfPieces={500} gravity={0.1} />}
-
-            {/* FALLING NOTES LAYER */}
-            {gameStatus === 'PLAYING' && (
-                <div className="falling-notes-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 5 }}>
-                    <div className="falling-note" style={{
-                        left: `${(stepIndex / gameSequence.length) * 80 + 10}%`,
-                        animationDuration: '2s'
-                    }}>
-                        🎵
-                    </div>
-                </div>
-            )}
-
-            <div className="touch-game-container">
-                {/* REWARD OVERLAY (NEW STICKER POPUP) */}
-                {gameStatus === 'WIN' && (
-                    <div className="sticker-popup-overlay">
-                        <div className="fireworks-container">
-                            <div className="firework-burst" style={{ top: '10%', left: '10%', animation: 'popIn 0.5s', opacity: 1 }}></div>
-                            <div className="firework-burst" style={{ top: '20%', right: '10%', animation: 'popIn 0.7s 0.2s', opacity: 1 }}></div>
-                            <div className="firework-burst" style={{ bottom: '30%', left: '30%', animation: 'popIn 0.6s 0.4s', opacity: 1 }}></div>
-                        </div>
-
-                        <div className="popup-content-box">
-                            <div className="popup-title-badge">LEVEL COMPLETE!</div>
-
-                            <div className="trophy-container" style={{ width: 120, height: 120, marginTop: 10, position: 'absolute', top: -60, right: -40 }}>
-                                <img src="/trophy.png" className="trophy-img" style={{ width: '100%', height: 'auto' }} alt="Trophy" />
-                                <div className="yay-speech-bubble">Yay!</div>
-                            </div>
-
-                            <h2 style={{ color: '#333', marginTop: 40 }}>Bé nhận được Sticker mới!</h2>
-
-                            <div className="new-sticker-glow-container">
-                                <div className="glow-ring-back"></div>
-                                <div className="glow-ring-front"></div>
-                                <div style={{ width: 140, height: 140, borderRadius: '50%', overflow: 'hidden', position: 'relative', border: '4px solid white', zIndex: 10 }}>
-                                    <img src="/stickers.png" className="sticker-reveal-img" style={{ width: '200%', height: '200%', objectPosition: '0 0', margin: '-50% 0 0 -50%' }} alt="Sticker" />
-                                </div>
-                            </div>
-
-                            <div style={{ fontSize: '1.2rem', color: '#888', fontStyle: 'italic', marginBottom: 20 }}>
-                                "Mèo âm nhạc"
-                            </div>
-
-                            <button className="btn-collect-reward" onClick={() => { setStepIndex(0); setGameStatus('PLAYING'); setShowConfetti(false); }}>
-                                🎁 NHẬN QUÀ!
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* Warning Overlay */}
-                {(isPortrait && !forceRotate) && (
-                    <div className="portrait-warning" style={{ display: 'flex' }}>
-                        <div className="rotate-icon">📱➡️</div>
-                        <h2>Vui lòng xoay ngang điện thoại!</h2>
-                        <button className="btn-force-rotate" onClick={() => setForceRotate(true)}>
-                            🔄 Xoay Ngang Ngay
-                        </button>
-                    </div>
-                )}
-
-                <div className="glass-panel">
-                    <button className="btn-menu-back" onClick={() => setView('SELECTION')}>
-                        <span style={{ fontSize: '1.5rem' }}>🏠</span>
-                    </button>
-
-                    <div className="status-bar compacted">
-                        <div className="info-grid">
-                            <div className="info-row title-row">
-                                <span style={{ fontSize: '1.5rem', color: 'white' }}>Bài: {currentScale?.name}</span>
-                                <div className="progress-track tiny">
-                                    <div className="progress-fill" style={{ width: `${progressPercent}%` }}></div>
-                                </div>
-                            </div>
-
-                            <div className="info-row prompt-row">
-                                {gameStatus === 'DEMO' ? (
-                                    <span style={{ color: '#FF9800' }}>▶ Đang nghe mẫu... (nhìn nốt nhé)</span>
-                                ) : (
-                                    <>
-                                        <span>Tiếp theo:</span>
-                                        <span className="next-note-target-box" style={{ background: '#FFEB3B', color: '#333' }}>{currentTarget.note?.replace(/[0-9]/, '')}</span>
-                                        <span className="finger-box">Ngón: <strong>{currentTarget.finger}</strong></span>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    <button className={`btn-demo ${gameStatus === 'DEMO' ? 'active' : ''}`} disabled={gameStatus === 'DEMO'} onClick={playDemo}>
-                        {gameStatus === 'DEMO' ? '⏹' : '▶ Nghe Mẫu'}
-                    </button>
-                </div>
-
-                <div className="piano-scroll-container">
-                    <div className="piano-keyboard extended" style={{ background: 'transparent' }}>
-                        {pianoKeys.map((k, i) => {
-                            let fingerToDisplay = null;
-                            let isCurrent = false;
-                            let isFuture = false;
-
-                            if (gameStatus === 'DEMO') {
-                                const target = gameSequence[demoIndex];
-                                if (target && k.note === target.note) {
-                                    isCurrent = true;
-                                    fingerToDisplay = target.finger;
-                                }
-                                else {
-                                    const futureStep = gameSequence.slice(demoIndex + 1).find(item => item.note === k.note);
-                                    if (futureStep) {
-                                        isFuture = true;
-                                        fingerToDisplay = futureStep.finger;
-                                    }
-                                }
-                            }
-                            else if (gameStatus === 'PLAYING') {
-                                const target = gameSequence[stepIndex];
-                                if (target && k.note === target.note) {
-                                    isCurrent = true;
-                                    fingerToDisplay = target.finger;
-                                }
-                                else {
-                                    const futureStep = gameSequence.slice(stepIndex + 1).find(item => item.note === k.note);
-                                    if (futureStep) {
-                                        isFuture = true;
-                                        fingerToDisplay = futureStep.finger;
-                                    }
-                                }
-                            }
-
-                            return (
-                                <KeyComponent
-                                    key={`${k.note}-${i}`}
-                                    k={k}
-                                    index={i}
-                                    isCurrent={isCurrent}
-                                    isFuture={isFuture}
-                                    finger={fingerToDisplay}
-                                    onPlay={handleNotePlay}
-                                    allKeys={pianoKeys}
-                                />
-                            );
-                        })}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-export default TouchGame;
+    export default TouchGame;
