@@ -1,5 +1,5 @@
 /* =========================================
-   TRUE LANDSCAPE SUPPORT - PIANO KIDS
+   TRUE LANDSCAPE SUPPORT - PIANO KIDS (IOS FIX)
    ========================================= */
 
 /* GLOBAL FONT */
@@ -13,7 +13,7 @@ button,
 
 /* 
    BASE CONTAINER 
-   Default: Hidden/Warning if logic dictates, but we rely on Media Queries.
+   Default: Flex (Visible). Logic flipped by Media Query.
 */
 .touch-game-fullscreen {
   position: fixed;
@@ -21,30 +21,36 @@ button,
   left: 0;
   right: 0;
   bottom: 0;
+  width: 100vw;
+  height: 100svh;
+  /* Safari Viewport Fix */
   background-color: #222;
   z-index: 1000;
-  /* High but below Warning */
   display: flex;
   flex-direction: column;
   overflow: hidden;
   box-sizing: border-box;
+
+  /* Safe Area for Landscape (Notch) */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* 
    PORTRAIT WARNING OVERLAY
-   Using direct CSS Media Queries for robustness 
+   Displayed ONLY when device is actually in Portrait
 */
 .portrait-warning {
   display: none !important;
-  /* Default hidden */
+  /* Default Hidden */
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: #212121;
+  background: #FF5722;
   z-index: 99999;
-  /* Highest priority */
   color: white;
   flex-direction: column;
   justify-content: center;
@@ -53,106 +59,76 @@ button,
   padding: 20px;
 }
 
-/* SHOW WARNING ONLY IN PORTRAIT */
+/* 
+   MEDIA QUERY LOGIC 
+   Strictly control visibility based on orientation
+*/
+
+/* PORTRAIT: Show Warning, Hide Game */
 @media screen and (orientation: portrait) {
   .portrait-warning {
     display: flex !important;
   }
 
-  /* Hide the game content behind it to prevent glitches */
   .touch-game-container,
   .forest-game-content,
   .glass-panel,
-  .piano-scroll-container {
-    visibility: hidden;
+  .piano-scroll-container,
+  .game-content {
+    display: none !important;
   }
 }
 
-/* 
-   LANDSCAPE LAYOUT (The Game)
-   Active when device is rotated.
-*/
+/* LANDSCAPE: Ensure Game is Visible, Hide Warning */
 @media screen and (orientation: landscape) {
-  .touch-game-fullscreen {
-    width: 100vw;
-    height: 100dvh;
-    /* Use dynamic viewport height */
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-    padding-bottom: env(safe-area-inset-bottom);
+  .portrait-warning {
+    display: none !important;
   }
 
   .touch-game-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+    display: flex !important;
     height: 100%;
     width: 100%;
-    visibility: visible;
   }
 }
-
-/* REMOVED: .forced-landscape class as we now rely on native rotation */
 
 /* PIANO CONTAINER */
 .piano-scroll-container {
   flex: 1;
   width: 100%;
-  min-height: 0;
-  overflow: hidden;
-  background: #111;
-  display: flex;
-  align-items: stretch;
   position: relative;
-}
-
-/* Hide scrollbar */
-.piano-scroll-container::-webkit-scrollbar {
-  display: none;
-}
-
-.piano-keyboard.extended {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 100%;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  background: transparent;
+  overflow: hidden;
+  /* No scroll */
+  background: #333;
   display: flex;
-  z-index: 50;
-  /* Ensure it is above falling notes but below overlays */
 }
 
-/* KEY STYLES */
-.key {
-  position: absolute;
-  top: 0;
-  box-sizing: border-box;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-  touch-action: none;
+/* Force Keyboard to fill container relative */
+.piano-keyboard.extended {
+  position: relative !important;
+  /* Changed from absolute to relative for Flex child */
+  width: 100%;
+  height: 100%;
+  display: flex;
+  /* Flex context for Keys */
+  background: transparent;
+  z-index: 50;
 }
 
 /* HUD STYLES */
 .glass-panel {
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 5px 15px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  padding: 5px 20px;
+  /* More breathing room */
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  color: white;
+  gap: 15px;
   flex-shrink: 0;
   width: 100%;
   height: 60px;
-  /* Compact HUD */
+  z-index: 100;
 }
 
 /* STATUS BAR */
