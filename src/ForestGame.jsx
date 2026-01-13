@@ -399,6 +399,9 @@ function ForestGame({ onBack }) {
                             // We use 'active-hint' style which is usually green/blue. Let's force a blue style if needed,
                             // but usually the default hint style is good. User asked for "Green/Blue dots".
 
+                            // FOREST KEYBOARD: INTERACTIVE HYBRID
+                            // 1. Visual Hint: Show Green/Blue dot on target keys (both hands logic)
+                            // 2. Interaction: Clicking key triggers 'checkNote' simulating external play
                             return (
                                 <KeyComponent
                                     key={`${k.note}-${i}`}
@@ -407,7 +410,11 @@ function ForestGame({ onBack }) {
                                     isCurrent={isTarget} // Shows the hint dot
                                     isFuture={false}
                                     finger={null}
-                                    onPlay={() => { }} // Visual only
+                                    onPlay={() => {
+                                        // Allow manual play to trigger check
+                                        playSound('piano', k.note);
+                                        checkNote(noteName);
+                                    }}
                                     allKeys={pianoKeys}
                                 />
                             );
