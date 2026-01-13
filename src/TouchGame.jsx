@@ -327,7 +327,10 @@ function TouchGame({ onBack }) {
                                     {s.root}
                                 </div>
                             </div>
-                            <div className="flower-label" style={{ color: s.color }}>{s.name}</div>
+                            <div className="flower-label" style={{ color: s.color, textAlign: 'center' }}>
+                                {s.name}
+                                <div style={{ fontSize: '0.7rem', color: '#888', fontWeight: 'normal' }}>Âm Giai Trưởng</div>
+                            </div>
                         </div>
                     ))}
                 </div>

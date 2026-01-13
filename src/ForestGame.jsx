@@ -305,7 +305,10 @@ function ForestGame({ onBack }) {
                                     {['🌻', '🌷', '🌹', '🌼', '🌺', '🌸', '💐'][idx % 7]}
                                 </div>
 
-                                <div className="flower-name-tag" style={{ color: s.color }}>{s.name}</div>
+                                <div className="flower-name-tag" style={{ color: s.color, textAlign: 'center' }}>
+                                    {s.name} <br />
+                                    <span style={{ fontSize: '0.6rem', color: '#888', fontWeight: 'normal' }}>Âm Giai Trưởng</span>
+                                </div>
                             </div>
                         </div>
                     ))}
