@@ -198,12 +198,63 @@ body {
     box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1);
 }
 
+
+/* GUIDE CHARACTERS */
+.pipo-guide-container {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 50;
+    display: flex;
+    align-items: flex-end;
+}
+
+.pipo-img {
+    width: 150px;
+    height: auto;
+    filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.3));
+    animation: bounce 2s infinite ease-in-out;
+}
+
+.speech-bubble {
+    background: white;
+    padding: 15px 25px;
+    border-radius: 20px;
+    border-bottom-left-radius: 0;
+    margin-bottom: 20px;
+    margin-left: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    font-weight: bold;
+    color: #333;
+    font-size: 1.1rem;
+    position: relative;
+    white-space: nowrap;
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 0;
+    border-width: 10px 10px 0;
+    border-style: solid;
+    border-color: white transparent;
+}
+
+/* Updated Flutter Butterfly */
 .butterfly-guide {
     position: absolute;
-    top: 90px;
+    top: 100px;
     right: 20px;
-    z-index: 10;
-    animation: floatButterfly 3s ease-in-out infinite;
+    z-index: 50;
+    animation: floatButterfly 6s ease-in-out infinite;
+}
+
+.flutter-img {
+    width: 100px;
+    height: auto;
+    filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.2));
 }
 
 .butterfly-bubble {
@@ -211,15 +262,76 @@ body {
     padding: 10px;
     border-radius: 15px;
     border-bottom-left-radius: 2px;
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: #E91E63;
     font-weight: bold;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     white-space: nowrap;
     position: absolute;
-    right: 50px;
-    top: -10px;
+    right: 80px;
+    top: 10px;
+    z-index: 2;
 }
+
+/* Sparkle Trail Animation */
+.sparkle-trail {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 0 5px #FFF;
+    opacity: 0;
+    pointer-events: none;
+    animation: sparkleFade 1.5s linear infinite;
+}
+
+.sparkle-1 {
+    top: 50%;
+    left: -20px;
+    animation-delay: 0s;
+}
+
+.sparkle-2 {
+    top: 20%;
+    left: -10px;
+    animation-delay: 0.3s;
+    width: 6px;
+    height: 6px;
+}
+
+.sparkle-3 {
+    top: 80%;
+    left: -15px;
+    animation-delay: 0.6s;
+    width: 8px;
+    height: 8px;
+}
+
+@keyframes sparkleFade {
+    0% {
+        transform: scale(0) translate(0, 0);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1.5) translate(-30px, 10px);
+        opacity: 0;
+    }
+}
+
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
 
 @keyframes floatButterfly {
 

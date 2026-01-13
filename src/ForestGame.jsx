@@ -275,10 +275,14 @@ function ForestGame({ onBack }) {
                     <button className="btn-home-circle" onClick={() => setGameState('SETUP')}>⚙️</button>
                 </div>
 
-                {/* Butterfly Instruction */}
+                {/* Butterfly Instruction with Flutter Character */}
                 <div className="butterfly-guide">
-                    <div className="butterfly-bubble">Chọn bông hoa!</div>
-                    <div style={{ fontSize: '3rem' }}>🦋</div>
+                    <div className="butterfly-bubble">Chọn bông hoa âm nhạc nào!</div>
+                    <img src="/flutter-butterfly.png" className="flutter-img" alt="Flutter" />
+                    {/* Sparkle Trail */}
+                    <div className="sparkle-trail sparkle-1"></div>
+                    <div className="sparkle-trail sparkle-2"></div>
+                    <div className="sparkle-trail sparkle-3"></div>
                 </div>
 
                 <div className="garden-path-container">
