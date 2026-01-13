@@ -37,7 +37,7 @@ const KeyComponent = ({ k, index, isCurrent, isFuture, isPlayed, finger, onPlay,
             className={`key ${k.type} ${keyStateClass}`}
             style={{
                 left: isWhite ? `${leftPosPercent}%` : `calc(${leftPosPercent}% - 2%)`,
-                width: isWhite ? `${WHITE_WIDTH_PERCENT}%` : '5.5%', // Slightly wider black keys for 'fat' look
+                width: isWhite ? `${WHITE_WIDTH_PERCENT}%` : '5.5%',
                 // JELLY STYLING: Creamy white for white keys, Dark Graphite for black
                 background: isWhite ? '#FFF3E0' : 'linear-gradient(180deg, #424242 0%, #212121 100%)',
                 // Rainbow color only on bottom border for white keys
@@ -53,7 +53,7 @@ const KeyComponent = ({ k, index, isCurrent, isFuture, isPlayed, finger, onPlay,
             onMouseDown={(e) => { e.preventDefault(); onPlay && onPlay(k.note); }}
             onTouchStart={(e) => { e.stopPropagation(); onPlay && onPlay(k.note); }}
         >
-            {/* FALLING NOTE BUBBLE EFFECT (Simple placeholder for local interaction) */}
+            {/* FALLING NOTE BUBBLE EFFECT */}
             {isPlayed && (
                 <div className="key-ripple" style={{ borderColor: config.color }}></div>
             )}
@@ -74,7 +74,7 @@ const KeyComponent = ({ k, index, isCurrent, isFuture, isPlayed, finger, onPlay,
                         {config.animal}
                     </span>
                     <span className="note-name" style={{
-                        color: '#6D4C41', // Brown/Graphite text instead of rainbow hard to read
+                        color: '#6D4C41',
                         fontWeight: '900', fontSize: '1.4rem',
                         fontFamily: '"Comic Sans MS", cursive, sans-serif'
                     }}>
