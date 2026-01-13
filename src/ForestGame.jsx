@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Confetti from 'react-confetti';
 import * as Tone from 'tone';
 import './ForestGame.css';
+import './TouchGame.css'; // Landscape styles
 import { playSound } from './utils/sound';
 import KeyComponent from './components/KeyComponent';
 
@@ -335,98 +336,89 @@ function ForestGame({ onBack }) {
             <div className="forest-hud">
                 <button className="btn-small" onClick={() => setGameState('SELECT_SCALE')}>🔙</button>
                 <div className="rep-counter-panel">
-                    <div className="target-badge">Mục tiêu: {targetReps}</div>
-                    <div className="rep-text">Đã xong</div>
-                    <div className="rep-value">{completedReps}</div>
-                </div>
-                <div style={{ background: 'white', padding: '10px 20px', borderRadius: '20px', color: '#333', fontWeight: 'bold' }}>
-                    {gameState === 'ERROR' ? (
-                        <span style={{ color: 'red' }}>⚠️ {detectedNote} (Sai!)</span>
-                    ) : (
-                        <span>👂 Nghe: {detectedNote}</span>
-                    )}
-                </div>
-            </div>
+                    <div className={`touch-game-fullscreen ${isPortrait ? 'forced-landscape' : ''}`} style={{ background: '#4CAF50' }}>
+                        {/* FORCE LANDSCAPE WRAPPER - Replaces forest-container as root */}
 
-            {/* Warning Overlay */}
-            {(isPortrait && !forceRotate) && (
-                <div className="portrait-warning" style={{ display: 'flex', position: 'fixed', zIndex: 999 }}>
-                    <div className="rotate-icon">📱➡️</div>
-                    <h2>Vui lòng xoay ngang điện thoại!</h2>
-                    <button className="btn-force-rotate" onClick={() => setForceRotate(true)}>🔄 Xoay Ngang</button>
-                </div>
-            )}
+                        {/* Preload / Confetti */}
+                        {gameState === 'WIN' && <Confetti recycle={false} numberOfPieces={500} gravity={0.1} />}
 
-            {gameState === 'WIN' && (
-                <div className="setup-overlay" style={{ background: 'rgba(0,0,0,0.6)' }}>
-                    <Confetti recycle={true} />
-                    <h1 style={{ fontSize: '4rem', color: '#4CAF50' }}>🎉 XUẤT SẮC! 🎉</h1>
-                    <button className="rep-btn" onClick={() => setGameState('SETUP')}>Chơi Lại</button>
-                </div>
-            )}
+                        {/* Warning Overlay (reuse from CSS) */}
+                        {(isPortrait && !forceRotate) && (
+                            <div className="portrait-warning" style={{ display: 'flex', zIndex: 10001 }}>
+                                <div className="rotate-icon">📱➡️</div>
+                                <h2>Xoay ngang màn hình để chơi nhé!</h2>
+                            </div>
+                        )}
 
-            {/* SCENERY */}
-            <div className="sun-glow"></div>
-            <div className="tree-bg"></div>
+                        {/* Back Button */}
+                        <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 50 }}>
+                            <button className="btn-small" onClick={onBack}>🏠</button>
+                        </div>
 
-            {/* CHARACTER */}
-            <div className={`forest-character ${gameState === 'ERROR' ? 'shake-anim' : ''}`}
-                style={{
-                    left: `${10 + (stepIndex / gameSequence.length) * 80}%`,
-                    transition: 'left 0.5s',
-                    bottom: '200px' // Lift monkey up so keyboard fits
-                }}>
-                <div className="monkey-avatar">
-                    <span style={{ fontSize: '5rem' }}>
-                        {gameState === 'ERROR' ? '🙈' : (gameState === 'WIN' ? '🏆' : '🐵')}
-                    </span>
-                </div>
-                {/* Speech Bubble for current note */}
-                <div className="speech-bubble" style={{ minWidth: 100, textAlign: 'center' }}>
-                    {currentScale?.name} <br />
-                    <span style={{ color: 'red', fontSize: '1.5rem' }}>{currentTask.label}</span>
-                </div>
-            </div>
+                        {/* MAIN GAME CONTENT */}
+                        <div className="forest-game-content" style={{
+                            flex: 1, display: 'flex', flexDirection: 'column', width: '100%', height: '100%'
+                        }}>
+                            {/* HUD */}
+                            <div className="forest-hud" style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 60px 0 60px', alignItems: 'center' }}>
+                                <div className="score-box" style={{ background: 'white', padding: '5px 15px', borderRadius: 20 }}>
+                                    🍌 x {completedReps} / {targetReps}
+                                </div>
+                                <div style={{ background: 'white', padding: '10px 20px', borderRadius: '20px', color: '#333', fontWeight: 'bold' }}>
+                                    {gameState === 'ERROR' ? (
+                                        <span style={{ color: 'red' }}>⚠️ {detectedNote} (Sai!)</span>
+                                    ) : (
+                                        <span>👂 Nghe: {detectedNote}</span>
+                                    )}
+                                </div>
+                            </div>
 
-            {/* KEYBOARD DISPLAY - NEW STYLED */}
-            <div className="forest-visual-keyboard">
-                <div className="piano-scroll-container" style={{ overflow: 'visible', height: '100%', alignItems: 'flex-end' }}>
-                    <div className="piano-keyboard extended" style={{ background: 'transparent', boxShadow: 'none' }}>
-                        {pianoKeys.map((k, i) => {
-                            // SHOW BLUE DOTS FOR BOTH HANDS (Simulated by highlighting all matching octaves)
-                            // User requested "Blue dots" specifically.
-                            const noteName = k.note.replace(/[0-9]/g, '');
-                            const targetNames = taskNotes.map(tn => tn.replace(/[0-9]/g, ''));
-                            const isTarget = targetNames.includes(noteName);
+                            {/* GAME SCENE */}
+                            <div className="forest-scene" style={{ flex: 1, position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                {/* Character */}
+                                <div className="character-container" style={{ textAlign: 'center' }}>
+                                    <span style={{ fontSize: '5rem' }}>
+                                        {gameState === 'ERROR' ? '🙈' : (gameState === 'WIN' ? '🏆' : '🐵')}
+                                    </span>
+                                </div>
+                                {/* Speech Bubble for current note */}
+                                <div className="speech-bubble" style={{ minWidth: 100, textAlign: 'center', marginLeft: 20 }}>
+                                    {currentScale?.name} <br />
+                                    <span style={{ color: 'red', fontSize: '1.5rem' }}>{currentTask?.label || '?'}</span>
+                                </div>
+                            </div>
 
-                            // We use 'active-hint' style which is usually green/blue. Let's force a blue style if needed,
-                            // but usually the default hint style is good. User asked for "Green/Blue dots".
+                            {/* KEYBOARD DISPLAY - NEW STYLED */}
+                            <div className="forest-visual-keyboard" style={{ height: '40%', width: '100%', position: 'relative', zIndex: 40 }}>
+                                <div className="piano-scroll-container" style={{ width: '100%', height: '100%', display: 'flex' }}>
+                                    <div className="piano-keyboard extended" style={{ width: '100%', height: '100%', background: 'transparent' }}>
+                                        {pianoKeys.map((k, i) => {
+                                            // Logic...
+                                            const noteName = k.note.replace(/[0-9]/g, '');
+                                            const isTarget = (gameSequence[stepIndex]?.note || []).includes(noteName);
 
-                            // FOREST KEYBOARD: INTERACTIVE HYBRID
-                            // 1. Visual Hint: Show Green/Blue dot on target keys (both hands logic)
-                            // 2. Interaction: Clicking key triggers 'checkNote' simulating external play
-                            return (
-                                <KeyComponent
-                                    key={`${k.note}-${i}`}
-                                    k={k}
-                                    index={i}
-                                    isCurrent={isTarget} // Shows the hint dot
-                                    isFuture={false}
-                                    finger={null}
-                                    onPlay={() => {
-                                        // Allow manual play to trigger check
-                                        playSound('piano', k.note);
-                                        checkNote(noteName);
-                                    }}
-                                    allKeys={pianoKeys}
-                                />
-                            );
-                        })}
+                                            return (
+                                                <KeyComponent
+                                                    key={`${k.note}-${i}`}
+                                                    k={k}
+                                                    index={i}
+                                                    isCurrent={isTarget}
+                                                    isFuture={false}
+                                                    finger={null}
+                                                    onPlay={() => {
+                                                        playSound('piano', k.note);
+                                                        checkNote(noteName);
+                                                    }}
+                                                    allKeys={pianoKeys}
+                                                />
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    );
+                    );
 }
 
-export default ForestGame;
+                    export default ForestGame;
