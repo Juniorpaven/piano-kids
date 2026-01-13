@@ -345,6 +345,105 @@ body {
     }
 }
 
+/* === THEME 1: CANDY LAND (Touch Game) === */
+.candy-theme-bg {
+    background: linear-gradient(180deg, #F8BBD0 0%, #FCE4EC 100%);
+}
+
+.lollipop-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 900px;
+    padding: 20px;
+    padding-bottom: 120px;
+    /* Space for Pipo */
+}
+
+.lollipop-card {
+    width: 140px;
+    height: 190px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.lollipop-card:hover {
+    transform: scale(1.1) rotate(10deg);
+}
+
+.lollipop-card:active {
+    transform: scale(0.9);
+}
+
+.lollipop-img {
+    width: 120px;
+    height: 130px;
+    /* Slightly taller for stick */
+    object-fit: contain;
+    filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* === THEME 2: OCEAN ADVENTURE (Mic Game) === */
+.ocean-theme-bg {
+    background: linear-gradient(180deg, #E1F5FE 0%, #81D4FA 60%, #0288D1 100%);
+}
+
+.shell-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 900px;
+    padding: 20px;
+    padding-bottom: 60px;
+}
+
+.shell-card {
+    width: 130px;
+    height: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.3s;
+    position: relative;
+}
+
+.shell-card:hover {
+    transform: translateY(-10px) scale(1.1);
+}
+
+.shell-img {
+    width: 110px;
+    height: 100px;
+    object-fit: contain;
+    filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.2));
+}
+
+.bubble-float {
+    animation: floatBubble 4s ease-in-out infinite;
+}
+
+@keyframes floatBubble {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-15px);
+    }
+}
+
 /* Sticker Popup styles (already there, just tweaking z-index if needed) */
 .sticker-popup-overlay {
     z-index: 9999;

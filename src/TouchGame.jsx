@@ -287,54 +287,57 @@ function TouchGame({ onBack }) {
 
     if (view === 'SELECTION') {
         return (
-            <div className="app-main-menu" style={{ background: 'linear-gradient(180deg, #E0F7FA 0%, #81D4FA 100%)' }}>
-                <div className="musical-garden-header">
-                    <button className="btn-small" onClick={onBack}>🔙</button>
-                    <h2 style={{ color: '#0277BD', fontSize: '2rem' }}>Đảo Âm Nhạc</h2>
-                    <div className="coin-display">🟡 {coins}</div>
-                </div>
+    if (view === 'SELECTION') {
+            return (
+                <div className={`app-main-menu candy-theme-bg`}>
+                    <div className="musical-garden-header">
+                        <button className="btn-small" onClick={onBack}>🏠</button>
+                        <h2 style={{ color: '#E91E63', fontSize: '2rem', textShadow: '2px 2px 0px white' }}>🍭 Vương Quốc Kẹo 🍭</h2>
+                        <div className="coin-display">🟡 {coins}</div>
+                    </div>
 
-                {/* Hand Toggle - Optional, can keep or hide if reusing TouchGame logic */}
-                <div className="hand-toggle" style={{ marginTop: 10, marginBottom: 10 }}>
-                    <button className={`hand-btn ${handMode === 'LEFT' ? 'active' : ''}`} onClick={() => setHandMode('LEFT')}>🤚 Tay Trái</button>
-                    <button className={`hand-btn ${handMode === 'RIGHT' ? 'active' : ''}`} onClick={() => setHandMode('RIGHT')}>✋ Tay Phải</button>
-                </div>
+                    <div className="hand-toggle" style={{ marginTop: 10, marginBottom: 10 }}>
+                        <button className={`hand-btn ${handMode === 'LEFT' ? 'active' : ''}`} onClick={() => setHandMode('LEFT')}>🤚 Tay Trái</button>
+                        <button className={`hand-btn ${handMode === 'RIGHT' ? 'active' : ''}`} onClick={() => setHandMode('RIGHT')}>✋ Tay Phải</button>
+                    </div>
 
-                {/* PIPO BEAR GUIDE */}
-                <div className="pipo-guide-container">
-                    <img src="/pipo-bear.png" className="pipo-img" alt="Pipo Bear" />
-                    <div className="speech-bubble">Chạm vào hòn đảo bé thích nhé!</div>
-                </div>
+                    {/* PIPO BEAR GUIDE */}
+                    <div className="pipo-guide-container">
+                        <img src="/pipo-bear.png" className="pipo-img" alt="Pipo Bear" />
+                        <div className="speech-bubble">Chọn kẹo ngọt để bắt đầu nào!</div>
+                    </div>
 
-                <div className="garden-grid" style={{ paddingBottom: 150 }}>
-                    {SCALES.map((s, idx) => (
-                        <div key={s.id} className="flower-card" onClick={() => {
-                            setCurrentScale(s);
-                            setStepIndex(0);
-                            setGameStatus('PLAYING');
-                            setDemoIndex(-1);
-                            setShowConfetti(false);
-                            setView('PLAY');
-                        }}>
-                            <div className="flower-img-container">
-                                <img
-                                    src="/singing-flower.png"
-                                    className="flower-img"
-                                    alt="Singing Flower"
-                                    style={{ filter: `hue-rotate(${idx * 45}deg)` }}
-                                />
-                                <div className="flower-note-overlay" style={{ color: s.color, borderColor: s.color }}>
-                                    {s.root}
+                    <div className="lollipop-grid">
+                        {SCALES.map((s, idx) => (
+                            <div key={s.id} className="lollipop-card" onClick={() => {
+                                setCurrentScale(s);
+                                setStepIndex(0);
+                                setGameStatus('PLAYING');
+                                setDemoIndex(-1);
+                                setShowConfetti(false);
+                                setView('PLAY');
+                            }}>
+                                <div style={{ position: 'relative' }}>
+                                    <img
+                                        src="/lollipop_icon.png"
+                                        className="lollipop-img"
+                                        alt="Lollipop"
+                                        style={{ filter: `hue-rotate(${idx * 45}deg)` }}
+                                    />
+                                    <div className="flower-note-overlay" style={{ top: 20, right: 10, color: s.color, borderColor: s.color, background: 'white' }}>
+                                        {s.root}
+                                    </div>
+                                </div>
+                                <div className="flower-label" style={{ color: '#E91E63', fontWeight: '900', background: 'white', borderRadius: 10, padding: '2px 10px', marginTop: -20, zIndex: 10, boxShadow: '0 2px 5px rgba(0,0,0,0.1)', textAlign: 'center' }}>
+                                    {s.name}
+                                    <div style={{ fontSize: '0.6rem', color: '#888', fontWeight: 'normal' }}>Âm Giai Trưởng</div>
                                 </div>
                             </div>
-                            <div className="flower-label" style={{ color: s.color, textAlign: 'center' }}>
-                                {s.name}
-                                <div style={{ fontSize: '0.7rem', color: '#888', fontWeight: 'normal' }}>Âm Giai Trưởng</div>
-                            </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
-            </div>
+            );
+        }
         );
     }
 
