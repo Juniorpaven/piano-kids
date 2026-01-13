@@ -332,93 +332,89 @@ function ForestGame({ onBack }) {
 
     // GAME SCREEN with Rotation Check
     return (
-        <div className={`forest-container ${forceRotate ? 'forced-landscape' : ''}`}>
-            <div className="forest-hud">
-                <button className="btn-small" onClick={() => setGameState('SELECT_SCALE')}>🔙</button>
-                <div className="rep-counter-panel">
-                    <div className={`touch-game-fullscreen ${isPortrait ? 'forced-landscape' : ''}`} style={{ background: '#4CAF50' }}>
-                        {/* FORCE LANDSCAPE WRAPPER - Replaces forest-container as root */}
+        <div className={`touch-game-fullscreen ${isPortrait ? 'forced-landscape' : ''}`} style={{ background: '#4CAF50' }}>
+            {/* FORCE LANDSCAPE WRAPPER - Replaces forest-container as root */}
 
-                        {/* Preload / Confetti */}
-                        {gameState === 'WIN' && <Confetti recycle={false} numberOfPieces={500} gravity={0.1} />}
+            {/* Preload / Confetti */}
+            {gameState === 'WIN' && <Confetti recycle={false} numberOfPieces={500} gravity={0.1} />}
 
-                        {/* Warning Overlay (reuse from CSS) */}
-                        {(isPortrait && !forceRotate) && (
-                            <div className="portrait-warning" style={{ display: 'flex', zIndex: 10001 }}>
-                                <div className="rotate-icon">📱➡️</div>
-                                <h2>Xoay ngang màn hình để chơi nhé!</h2>
-                            </div>
+            {/* Warning Overlay (reuse from CSS) */}
+            {(isPortrait && !forceRotate) && (
+                <div className="portrait-warning" style={{ display: 'flex', zIndex: 10001 }}>
+                    <div className="rotate-icon">📱➡️</div>
+                    <h2>Xoay ngang màn hình để chơi nhé!</h2>
+                </div>
+            )}
+
+            {/* Back Button */}
+            <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 50 }}>
+                <button className="btn-small" onClick={onBack}>🏠</button>
+            </div>
+
+            {/* MAIN GAME CONTENT */}
+            <div className="forest-game-content" style={{
+                flex: 1, display: 'flex', flexDirection: 'column', width: '100%', height: '100%'
+            }}>
+                {/* HUD */}
+                <div className="forest-hud" style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 60px 0 60px', alignItems: 'center' }}>
+                    <div className="score-box" style={{ background: 'white', padding: '5px 15px', borderRadius: 20 }}>
+                        🍌 x {completedReps} / {targetReps}
+                    </div>
+                    <div style={{ background: 'white', padding: '10px 20px', borderRadius: '20px', color: '#333', fontWeight: 'bold' }}>
+                        {gameState === 'ERROR' ? (
+                            <span style={{ color: 'red' }}>⚠️ {detectedNote} (Sai!)</span>
+                        ) : (
+                            <span>👂 Nghe: {detectedNote}</span>
                         )}
+                    </div>
+                </div>
 
-                        {/* Back Button */}
-                        <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 50 }}>
-                            <button className="btn-small" onClick={onBack}>🏠</button>
-                        </div>
+                {/* GAME SCENE */}
+                <div className="forest-scene" style={{ flex: 1, position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    {/* Character */}
+                    <div className="character-container" style={{ textAlign: 'center' }}>
+                        <span style={{ fontSize: '5rem' }}>
+                            {gameState === 'ERROR' ? '🙈' : (gameState === 'WIN' ? '🏆' : '🐵')}
+                        </span>
+                    </div>
+                    {/* Speech Bubble for current note */}
+                    <div className="speech-bubble" style={{ minWidth: 100, textAlign: 'center', marginLeft: 20 }}>
+                        {currentScale?.name} <br />
+                        <span style={{ color: 'red', fontSize: '1.5rem' }}>{currentTask?.label || '?'}</span>
+                    </div>
+                </div>
 
-                        {/* MAIN GAME CONTENT */}
-                        <div className="forest-game-content" style={{
-                            flex: 1, display: 'flex', flexDirection: 'column', width: '100%', height: '100%'
-                        }}>
-                            {/* HUD */}
-                            <div className="forest-hud" style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 60px 0 60px', alignItems: 'center' }}>
-                                <div className="score-box" style={{ background: 'white', padding: '5px 15px', borderRadius: 20 }}>
-                                    🍌 x {completedReps} / {targetReps}
-                                </div>
-                                <div style={{ background: 'white', padding: '10px 20px', borderRadius: '20px', color: '#333', fontWeight: 'bold' }}>
-                                    {gameState === 'ERROR' ? (
-                                        <span style={{ color: 'red' }}>⚠️ {detectedNote} (Sai!)</span>
-                                    ) : (
-                                        <span>👂 Nghe: {detectedNote}</span>
-                                    )}
-                                </div>
-                            </div>
+                {/* KEYBOARD DISPLAY - NEW STYLED */}
+                <div className="forest-visual-keyboard" style={{ height: '40%', width: '100%', position: 'relative', zIndex: 40 }}>
+                    <div className="piano-scroll-container" style={{ width: '100%', height: '100%', display: 'flex' }}>
+                        <div className="piano-keyboard extended" style={{ width: '100%', height: '100%', background: 'transparent' }}>
+                            {pianoKeys.map((k, i) => {
+                                // Logic...
+                                const noteName = k.note.replace(/[0-9]/g, '');
+                                const isTarget = (gameSequence[stepIndex]?.note || []).includes(noteName);
 
-                            {/* GAME SCENE */}
-                            <div className="forest-scene" style={{ flex: 1, position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                {/* Character */}
-                                <div className="character-container" style={{ textAlign: 'center' }}>
-                                    <span style={{ fontSize: '5rem' }}>
-                                        {gameState === 'ERROR' ? '🙈' : (gameState === 'WIN' ? '🏆' : '🐵')}
-                                    </span>
-                                </div>
-                                {/* Speech Bubble for current note */}
-                                <div className="speech-bubble" style={{ minWidth: 100, textAlign: 'center', marginLeft: 20 }}>
-                                    {currentScale?.name} <br />
-                                    <span style={{ color: 'red', fontSize: '1.5rem' }}>{currentTask?.label || '?'}</span>
-                                </div>
-                            </div>
-
-                            {/* KEYBOARD DISPLAY - NEW STYLED */}
-                            <div className="forest-visual-keyboard" style={{ height: '40%', width: '100%', position: 'relative', zIndex: 40 }}>
-                                <div className="piano-scroll-container" style={{ width: '100%', height: '100%', display: 'flex' }}>
-                                    <div className="piano-keyboard extended" style={{ width: '100%', height: '100%', background: 'transparent' }}>
-                                        {pianoKeys.map((k, i) => {
-                                            // Logic...
-                                            const noteName = k.note.replace(/[0-9]/g, '');
-                                            const isTarget = (gameSequence[stepIndex]?.note || []).includes(noteName);
-
-                                            return (
-                                                <KeyComponent
-                                                    key={`${k.note}-${i}`}
-                                                    k={k}
-                                                    index={i}
-                                                    isCurrent={isTarget}
-                                                    isFuture={false}
-                                                    finger={null}
-                                                    onPlay={() => {
-                                                        playSound('piano', k.note);
-                                                        checkNote(noteName);
-                                                    }}
-                                                    allKeys={pianoKeys}
-                                                />
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
+                                return (
+                                    <KeyComponent
+                                        key={`${k.note}-${i}`}
+                                        k={k}
+                                        index={i}
+                                        isCurrent={isTarget}
+                                        isFuture={false}
+                                        finger={null}
+                                        onPlay={() => {
+                                            playSound('piano', k.note);
+                                            checkNote(noteName);
+                                        }}
+                                        allKeys={pianoKeys}
+                                    />
+                                );
+                            })}
                         </div>
                     </div>
-                    );
+                </div>
+            </div>
+        </div>
+    );
 }
 
-                    export default ForestGame;
+export default ForestGame;
