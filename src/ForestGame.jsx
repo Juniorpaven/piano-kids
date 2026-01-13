@@ -262,20 +262,35 @@ function ForestGame({ onBack }) {
         );
     }
 
-    // SCALE SELECT SCREEN
+    // SCALE SELECT SCREEN (MUSICAL GARDEN)
     if (gameState === 'SELECT_SCALE') {
         return (
-            <div className="app-main-menu"> {/* Reuse MainMenu styles for consistency */}
-                <div className="header-panel">
+            <div className="app-main-menu" style={{ background: 'linear-gradient(180deg, #E8F5E9 0%, #C8E6C9 100%)' }}>
+                <div className="musical-garden-header">
                     <button className="btn-small" onClick={() => setGameState('SETUP')}>🔙</button>
-                    <h2 style={{ color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>Chọn Bài Nhạc</h2>
+                    <h2 style={{ color: '#2E7D32', fontSize: '2rem', textShadow: 'none' }}>Khu Vườn Âm Thanh</h2>
                     <div style={{ width: 40 }}></div>
                 </div>
-                <div className="chord-grid">
-                    {SCALES.map(s => (
-                        <div key={s.id} className="chord-card" onClick={() => handleSelectScale(s)}>
-                            <div className="chord-title" style={{ background: s.color }}>{s.name}</div>
-                            <div className="chord-notes">{s.notes.join(' - ')}</div>
+
+                <p style={{ color: '#558B2F', fontWeight: 'bold', fontSize: '1.2rem' }}>Chọn một bông hoa để hát nào!</p>
+
+                <div className="garden-grid">
+                    {SCALES.map((s, idx) => (
+                        <div key={s.id} className="flower-card" onClick={() => handleSelectScale(s)} style={{ animationDelay: `${idx * 0.1}s` }}>
+                            <div className="flower-img-container">
+                                {/* Using mask or simpler CSS filter to simulate color change for flower could be hard with one image.
+                                     Let's just use CSS hue-rotate filter based on index! */}
+                                <img
+                                    src="/singing-flower.png"
+                                    className="flower-img"
+                                    alt="Singing Flower"
+                                    style={{ filter: `hue-rotate(${idx * 50}deg)` }}
+                                />
+                                <div className="flower-note-overlay" style={{ color: s.color, borderColor: s.color }}>
+                                    {s.root}
+                                </div>
+                            </div>
+                            <div className="flower-label" style={{ color: s.color }}>{s.name}</div>
                         </div>
                     ))}
                 </div>
