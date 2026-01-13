@@ -628,3 +628,189 @@ body {
         opacity: 0;
     }
 }
+
+/* === MOBILE RESPONSIVENESS FIXES (iPhone 11 & others) === */
+@media (max-width: 768px) {
+
+    /* 1. General Layout Fixes */
+    .app-main-menu,
+    .musical-garden-scene,
+    .forest-container,
+    .mic-container {
+        height: 100dvh;
+        /* Dynamic viewport height */
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-bottom: 80px;
+        /* Space for bottom nav or safe area */
+    }
+
+    .musical-garden-header {
+        padding: 10px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .musical-garden-header h2 {
+        font-size: 1.4rem !important;
+        /* Smaller title */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 50vw;
+    }
+
+    /* 2. Character Guides Positioning */
+    .pipo-guide-container {
+        position: fixed;
+        /* Keep him visible but out of the way */
+        bottom: 10px;
+        left: 0px;
+        transform: scale(0.65);
+        /* Smaller bear */
+        transform-origin: bottom left;
+        pointer-events: none;
+        /* Let touches pass through */
+        z-index: 90;
+    }
+
+    .butterfly-guide {
+        top: 60px;
+        /* Move up */
+        right: 5px;
+        transform: scale(0.7);
+        transform-origin: top right;
+        pointer-events: none;
+        z-index: 90;
+    }
+
+    .speech-bubble,
+    .butterfly-bubble {
+        font-size: 0.85rem;
+        padding: 8px 10px;
+        max-width: 160px;
+        white-space: normal;
+        /* Allow wrap */
+        pointer-events: auto;
+        /* Only bubble is clickable if needed */
+    }
+
+    /* 3. Theme Grids Scaling */
+    .lollipop-grid,
+    .shell-grid,
+    .garden-grid {
+        gap: 15px;
+        padding: 10px;
+        padding-bottom: 150px;
+        /* Ensure content clears characters */
+        justify-content: center;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .apple-grid-container {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px;
+        gap: 15px;
+    }
+
+    /* CANDY LAND - SCALING */
+    .lollipop-card {
+        width: 90px;
+        height: 130px;
+    }
+
+    .lollipop-img {
+        width: 80px;
+        height: 90px;
+    }
+
+    .flower-note-overlay {
+        width: 28px;
+        height: 28px;
+        font-size: 0.9rem;
+        top: 10px;
+        right: 0;
+    }
+
+    .flower-label {
+        font-size: 0.75rem !important;
+        margin-top: -15px !important;
+    }
+
+    /* OCEAN - SCALING */
+    .shell-card {
+        width: 90px;
+        height: 100px;
+    }
+
+    .shell-img {
+        width: 80px;
+        height: 70px;
+    }
+
+    /* FOREST - SCALING */
+    .flower-level-node {
+        margin-bottom: 20px;
+    }
+
+    .flower-circle-btn {
+        width: 100px;
+        height: 100px;
+        /* Smaller flowers */
+    }
+
+    .flower-face-icon {
+        font-size: 2.2rem;
+    }
+
+    .garden-path-container {
+        padding-top: 20px;
+        gap: 20px;
+    }
+
+    /* APPLE HARVEST */
+    .apple-btn {
+        width: 75px;
+        height: 85px;
+        margin: 5px;
+    }
+
+    .apple-number {
+        font-size: 1.4rem;
+    }
+
+    .apple-label {
+        font-size: 0.7rem;
+    }
+
+    /* 4. Utilities */
+    .btn-small,
+    .btn-home-circle {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+
+    .coin-display {
+        font-size: 0.9rem;
+        padding: 4px 8px;
+    }
+
+    /* 5. Forest Landscape Warning Fix */
+    .portrait-warning {
+        padding: 20px;
+        text-align: center;
+        width: 90%;
+        max-width: 350px;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        border-radius: 20px;
+    }
+
+    .portrait-warning h2 {
+        font-size: 1.3rem;
+    }
+}
