@@ -188,22 +188,38 @@ function MicGame({ onBack }) {
   };
 
   // RENDER
+  // --- RENDER ---
   if (gameState === 'MENU') {
     return (
-      <div className="app-main-menu" style={{ height: '100dvh', justifyContent: 'flex-start' }}>
-        <div className="header-panel">
+      <div className="app-main-menu ocean-theme-bg">
+        <div className="musical-garden-header">
           <button className="btn-small" onClick={onBack}>🏠</button>
-          <div style={{ color: 'white' }}>{status}</div>
+          <h2 style={{ color: '#01579B', fontSize: '2rem', textShadow: '0 2px 0 white' }}>🐳 Thám Hiểm Đại Dương 🐳</h2>
+          {/* Dolphin Guide */}
+          <div style={{ position: 'absolute', right: 20, top: 80, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div className="speech-bubble" style={{ whiteSpace: 'nowrap', marginBottom: 5, marginRight: 60 }}>
+              Cùng hát với biển cả nào!
+            </div>
+            <img src="/dolphin_guide.png" style={{ width: 120, animation: 'bounce 3s infinite' }} alt="Dolphin" />
+          </div>
         </div>
 
-        <h1 className="title-lg" style={{ fontSize: '2rem' }}>Thám Hiểm Rừng Xanh 🌳</h1>
-        <p className="subtitle-main">Dùng đàn thật (Organ/Piano) của bạn để mở khóa các bài hát!</p>
+        <p style={{ color: '#01579B', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: 20, zIndex: 2 }}>Dùng đàn Organ của bạn để mở khóa vỏ sò nhé:</p>
 
-        <div className="chord-grid">
-          {SCALES.map(s => (
-            <div key={s.id} className="chord-card" onClick={() => handleSelectScale(s)}>
-              <div className="chord-title" style={{ background: s.color }}>{s.name}</div>
-              <div className="chord-notes">Nhiệm vụ: {s.notes.join(' - ')}</div>
+        <div className="shell-grid">
+          {SCALES.map((s, idx) => (
+            <div key={s.id} className="shell-card bubble-float" style={{ animationDelay: `${idx * 0.2}s` }} onClick={() => handleSelectScale(s)}>
+              <div style={{ position: 'relative' }}>
+                <img src="/seashell_icon.png" className="shell-img" style={{ filter: `hue-rotate(${idx * 40}deg)` }} alt="Shell" />
+                <div className="flower-note-overlay" style={{
+                  position: 'absolute', top: 45, left: 35,
+                  width: 40, height: 40, fontSize: '1.1rem',
+                  background: 'rgba(255,255,255,0.8)', border: 'none', color: '#006064'
+                }}>
+                  {s.root}
+                </div>
+              </div>
+              <div className="flower-label" style={{ marginTop: 5, color: '#006064', fontSize: '1rem', width: 'auto', background: 'rgba(255,255,255,0.7)', borderRadius: 10, padding: '2px 8px' }}>{s.name}</div>
             </div>
           ))}
         </div>
