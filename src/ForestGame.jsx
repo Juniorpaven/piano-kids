@@ -244,6 +244,9 @@ function ForestGame({ onBack }) {
     if (gameState === 'SETUP') {
         return (
             <div className="forest-container">
+                <div style={{ position: 'absolute', top: 20, left: 20, zIndex: 100 }}>
+                    <button className="btn-home-circle" onClick={onBack}>🏠</button>
+                </div>
                 <div className="setup-overlay">
                     <h1 style={{ fontSize: '3rem', color: '#FFEB3B' }}>🌲 Rừng Xanh 🌲</h1>
                     <p>Chọn số lần tập (Reps) để bắt đầu:</p>
@@ -258,147 +261,145 @@ function ForestGame({ onBack }) {
                         ))}
                     </div>
                 </div>
-    // SCALE SELECT SCREEN (MUSICAL GARDEN)
-                if (gameState === 'SELECT_SCALE' || gameState === 'SETUP') {
-        // Consolidated SETUP into this view for better flow
-        const onBack = () => setGameState('SETUP'); // Define onBack for this context
-                return (
-                <div className="musical-garden-scene">
-                    <div className="garden-header-row">
-                        <button className="btn-home-circle" onClick={onBack}>🏠</button>
-                        <div className="garden-title-box">Musical Garden</div>
-                        <button className="btn-home-circle" style={{ opacity: 0 }}>⚙️</button>
-                    </div>
-
-                    {/* Butterfly Instruction */}
-                    <div className="butterfly-guide">
-                        <div className="butterfly-bubble">Chọn bông hoa!</div>
-                        <div style={{ fontSize: '3rem' }}>🦋</div>
-                    </div>
-
-                    <div className="garden-path-container">
-                        {SCALES.map((s, idx) => (
-                            <div key={s.id} className="flower-level-node">
-                                <div
-                                    className="flower-circle-btn bounce-hover"
-                                    onClick={() => handleSelectScale(s)}
-                                    style={{
-                                        // Slight staggering for left/right feel if desired, but centered is cleaner for mobile
-                                        borderColor: s.color,
-                                        background: `radial-gradient(circle, #fff 40%, ${s.color}22 100%)`
-                                    }}
-                                >
-                                    <div className="level-number-badge" style={{ background: s.color }}>{idx + 1}</div>
-
-                                    {/* Simple Emoji Flower Face or Icon */}
-                                    <div className="flower-face-icon" style={{ color: s.color }}>
-                                        {['🌻', '🌷', '🌹', '🌼', '🌺', '🌸', '💐'][idx % 7]}
-                                    </div>
-
-                                    <div className="flower-name-tag" style={{ color: s.color }}>{s.name}</div>
-                                </div>
-                            </div>
-                        ))}
-
-                        {/* Final Big Play Button at bottom of garden */}
-                        <button className="btn-jelly-lg"
-                            style={{ marginTop: 50, background: '#FF5252', width: 220, height: 70, fontSize: '1.5rem' }}
-                            onClick={() => {
-                                // Default to first scale if clicked
-                                handleSelectScale(SCALES[0]);
-                            }}
-                        >
-                            ▶ PLAY ALL
-                        </button>
-                    </div>
-                </div>
-                );
+            </div>
+        );
     }
 
-                const currentTask = gameSequence[stepIndex] || { };
-                const taskNotes = Array.isArray(currentTask.note) ? currentTask.note : [currentTask.note];
+    // SCALE SELECT SCREEN (MUSICAL GARDEN)
+    if (gameState === 'SELECT_SCALE') {
+        return (
+            <div className="musical-garden-scene">
+                <div className="garden-header-row">
+                    <button className="btn-home-circle" onClick={onBack}>🏠</button>
+                    <div className="garden-title-box">Musical Garden</div>
+                    <button className="btn-home-circle" onClick={() => setGameState('SETUP')}>⚙️</button>
+                </div>
 
-                // GAME SCREEN with Rotation Check
-                return (
-                <div className={`forest-container ${forceRotate ? 'forced-landscape' : ''}`}>
-                    <div className="forest-hud">
-                        <button className="btn-small" onClick={() => setGameState('SELECT_SCALE')}>🔙</button>
-                        <div className="rep-counter-panel">
-                            <div className="target-badge">Mục tiêu: {targetReps}</div>
-                            <div className="rep-text">Đã xong</div>
-                            <div className="rep-value">{completedReps}</div>
-                        </div>
-                        <div style={{ background: 'white', padding: '10px 20px', borderRadius: '20px', color: '#333', fontWeight: 'bold' }}>
-                            {gameState === 'ERROR' ? (
-                                <span style={{ color: 'red' }}>⚠️ {detectedNote} (Sai!)</span>
-                            ) : (
-                                <span>👂 Nghe: {detectedNote}</span>
-                            )}
-                        </div>
-                    </div>
+                {/* Butterfly Instruction */}
+                <div className="butterfly-guide">
+                    <div className="butterfly-bubble">Chọn bông hoa!</div>
+                    <div style={{ fontSize: '3rem' }}>🦋</div>
+                </div>
 
-                    {/* Warning Overlay */}
-                    {(isPortrait && !forceRotate) && (
-                        <div className="portrait-warning" style={{ display: 'flex', position: 'fixed', zIndex: 999 }}>
-                            <div className="rotate-icon">📱➡️</div>
-                            <h2>Vui lòng xoay ngang điện thoại!</h2>
-                            <button className="btn-force-rotate" onClick={() => setForceRotate(true)}>🔄 Xoay Ngang</button>
-                        </div>
-                    )}
+                <div className="garden-path-container">
+                    {SCALES.map((s, idx) => (
+                        <div key={s.id} className="flower-level-node">
+                            <div
+                                className="flower-circle-btn bounce-hover"
+                                onClick={() => handleSelectScale(s)}
+                                style={{
+                                    borderColor: s.color,
+                                    background: `radial-gradient(circle, #fff 40%, ${s.color}22 100%)`
+                                }}
+                            >
+                                <div className="level-number-badge" style={{ background: s.color }}>{idx + 1}</div>
 
-                    {gameState === 'WIN' && (
-                        <div className="setup-overlay" style={{ background: 'rgba(0,0,0,0.6)' }}>
-                            <Confetti recycle={true} />
-                            <h1 style={{ fontSize: '4rem', color: '#4CAF50' }}>🎉 XUẤT SẮC! 🎉</h1>
-                            <button className="rep-btn" onClick={() => setGameState('SETUP')}>Chơi Lại</button>
-                        </div>
-                    )}
+                                <div className="flower-face-icon" style={{ color: s.color }}>
+                                    {['🌻', '🌷', '🌹', '🌼', '🌺', '🌸', '💐'][idx % 7]}
+                                </div>
 
-                    {/* SCENERY */}
-                    <div className="sun-glow"></div>
-                    <div className="tree-bg"></div>
-
-                    {/* CHARACTER */}
-                    <div className={`forest-character ${gameState === 'ERROR' ? 'shake-anim' : ''}`}
-                        style={{ left: `${10 + (stepIndex / gameSequence.length) * 80}%`, transition: 'left 0.5s' }}>
-                        <div className="monkey-avatar">
-                            {gameState === 'ERROR' ? '🙈' : (gameState === 'WIN' ? '🏆' : '🐵')}
-                        </div>
-                    </div>
-
-                    {/* KEYBOARD DISPLAY - NEW */}
-                    <div className="current-task-display" style={{ bottom: 0 }}>
-                        <div style={{ marginBottom: 10, fontSize: '1.5rem', fontWeight: 'bold', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
-                            Nốt cần đánh: <span style={{ color: '#FFEB3B', fontSize: '2rem' }}>{currentTask.label}</span>
-                        </div>
-
-                        <div className="piano-scroll-container" style={{ height: 'auto', paddingBottom: 10 }}>
-                            <div className="piano-keyboard extended">
-                                {pianoKeys.map((k, i) => {
-                                    // LOGIC: Show Green Dot on ALL keys that match the Target Note Name
-                                    // e.g. Target "C" -> Highlights C3, C4
-                                    const noteName = k.note.replace(/[0-9]/g, '');
-                                    const isTarget = taskNotes.includes(noteName);
-                                    // Highlight Detected Note with Blue or similar? No, user removed blue. Just Green for target.
-
-                                    return (
-                                        <KeyComponent
-                                            key={`${k.note}-${i}`}
-                                            k={k}
-                                            index={i}
-                                            isCurrent={isTarget} // Green Dot
-                                            isFuture={false}
-                                            finger={null}
-                                            onPlay={() => { }} // Visual only
-                                            allKeys={pianoKeys}
-                                        />
-                                    );
-                                })}
+                                <div className="flower-name-tag" style={{ color: s.color }}>{s.name}</div>
                             </div>
                         </div>
+                    ))}
+
+                    <button className="btn-jelly-lg"
+                        style={{ marginTop: 50, background: '#FF5252', width: 220, height: 70, fontSize: '1.5rem' }}
+                        onClick={() => {
+                            handleSelectScale(SCALES[0]);
+                        }}
+                    >
+                        ▶ PLAY ALL
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    const currentTask = gameSequence[stepIndex] || {};
+    const taskNotes = Array.isArray(currentTask.note) ? currentTask.note : [currentTask.note];
+
+    // GAME SCREEN with Rotation Check
+    return (
+        <div className={`forest-container ${forceRotate ? 'forced-landscape' : ''}`}>
+            <div className="forest-hud">
+                <button className="btn-small" onClick={() => setGameState('SELECT_SCALE')}>🔙</button>
+                <div className="rep-counter-panel">
+                    <div className="target-badge">Mục tiêu: {targetReps}</div>
+                    <div className="rep-text">Đã xong</div>
+                    <div className="rep-value">{completedReps}</div>
+                </div>
+                <div style={{ background: 'white', padding: '10px 20px', borderRadius: '20px', color: '#333', fontWeight: 'bold' }}>
+                    {gameState === 'ERROR' ? (
+                        <span style={{ color: 'red' }}>⚠️ {detectedNote} (Sai!)</span>
+                    ) : (
+                        <span>👂 Nghe: {detectedNote}</span>
+                    )}
+                </div>
+            </div>
+
+            {/* Warning Overlay */}
+            {(isPortrait && !forceRotate) && (
+                <div className="portrait-warning" style={{ display: 'flex', position: 'fixed', zIndex: 999 }}>
+                    <div className="rotate-icon">📱➡️</div>
+                    <h2>Vui lòng xoay ngang điện thoại!</h2>
+                    <button className="btn-force-rotate" onClick={() => setForceRotate(true)}>🔄 Xoay Ngang</button>
+                </div>
+            )}
+
+            {gameState === 'WIN' && (
+                <div className="setup-overlay" style={{ background: 'rgba(0,0,0,0.6)' }}>
+                    <Confetti recycle={true} />
+                    <h1 style={{ fontSize: '4rem', color: '#4CAF50' }}>🎉 XUẤT SẮC! 🎉</h1>
+                    <button className="rep-btn" onClick={() => setGameState('SETUP')}>Chơi Lại</button>
+                </div>
+            )}
+
+            {/* SCENERY */}
+            <div className="sun-glow"></div>
+            <div className="tree-bg"></div>
+
+            {/* CHARACTER */}
+            <div className={`forest-character ${gameState === 'ERROR' ? 'shake-anim' : ''}`}
+                style={{ left: `${10 + (stepIndex / gameSequence.length) * 80}%`, transition: 'left 0.5s' }}>
+                <div className="monkey-avatar">
+                    {gameState === 'ERROR' ? '🙈' : (gameState === 'WIN' ? '🏆' : '🐵')}
+                </div>
+            </div>
+
+            {/* KEYBOARD DISPLAY - NEW */}
+            <div className="current-task-display" style={{ bottom: 0 }}>
+                <div style={{ marginBottom: 10, fontSize: '1.5rem', fontWeight: 'bold', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                    Nốt cần đánh: <span style={{ color: '#FFEB3B', fontSize: '2rem' }}>{currentTask.label}</span>
+                </div>
+
+                <div className="piano-scroll-container" style={{ height: 'auto', paddingBottom: 10 }}>
+                    <div className="piano-keyboard extended">
+                        {pianoKeys.map((k, i) => {
+                            // LOGIC: Show Green Dot on ALL keys that match the Target Note Name
+                            // e.g. Target "C" -> Highlights C3, C4
+                            const noteName = k.note.replace(/[0-9]/g, '');
+                            const isTarget = taskNotes.includes(noteName);
+                            // Highlight Detected Note with Blue or similar? No, user removed blue. Just Green for target.
+
+                            return (
+                                <KeyComponent
+                                    key={`${k.note}-${i}`}
+                                    k={k}
+                                    index={i}
+                                    isCurrent={isTarget} // Green Dot
+                                    isFuture={false}
+                                    finger={null}
+                                    onPlay={() => { }} // Visual only
+                                    allKeys={pianoKeys}
+                                />
+                            );
+                        })}
                     </div>
                 </div>
-                );
+            </div>
+        </div>
+    );
 }
 
-                export default ForestGame;
+export default ForestGame;
