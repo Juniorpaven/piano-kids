@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, height=device-height">
+    <title>Piano Kids Adventure</title>
+    <!-- Tone.js for Audio -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        /* === 1. RESET & BASICS === */
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none; /* Safari */
+            -webkit-touch-callout: none;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #222;
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+        }
+
+        /* === 2. PORTRAIT LOCK (SCREEN 1) === */
+        #portrait-warning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100svh;
+            background: #FFD54F;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            text-align: center;
+        }
+
+        .rotate-anim {
+            font-size: 80px;
+            animation: rotatePhone 2s infinite ease-in-out;
+            margin-bottom: 20px;
+        }
+
+        @keyframes rotatePhone {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(-90deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        #portrait-text {
+            font-size: 24px;
+            color: #d35400;
+            font-weight: bold;
+        }
+
+        /* Hide warning on Landscape */
+        @media screen and (orientation: landscape) {
+            #portrait-warning { display: none; }
+            #game-container { display: flex; }
+        }
+
+        /* === 3. GAME CONTAINER (SCREEN 2 - LANDSCAPE) === */
+        #game-container {
+            display: none; /* Hidden by default in css, shown in media query */
+            width: 100vw;
+            height: 100svh;
+            flex-direction: column;
+            background: linear-gradient(180deg, #81D4FA 0%, #B3E5FC 100%);
+            position: relative;
+        }
+
+        /* Header: Score & Objective */
+        header {
+            height: 15%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+            background: rgba(255,255,255,0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        .candy-score {
+            font-size: 30px;
+            color: #E91E63;
+            font-weight: 900;
+            text-shadow: 2px 2px 0 #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #fff;
+            padding: 5px 20px;
+            border-radius: 30px;
+            box-shadow: 0 5px 0 #E0E0E0;
+        }
+
+        .mission-btn {
+            background: #FF9800;
+            border: none;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 20px;
+            box-shadow: 0 6px 0 #E65100;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        .mission-btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 #E65100;
+        }
+
+        .current-mission-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.2);
+            padding: 5px 15px;
+            border-radius: 12px;
+        }
+
+        /* Piano Wrapper */
+        .piano-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* === 4. JELLY KEYS DESIGN === */
+        #piano {
+            display: grid;
+            /* 14 columns for 7 white keys spacing logic specifically handling black keys offset */
+            /* Simplified Grid: 
+               White keys are standard columns.
+               Black keys overlap grid lines.
+               Let's stick to flex/absolute for robust piano layout or a simpler CSS Grid technique.
+               Using a container relative approach for "Jelly" feel.
+            */
+            position: relative;
+            height: 70%;
+            width: 90%;
+            margin: auto;
+            /* White keys container */
+            display: flex;
+            gap: 6px;
+        }
+
+        .white-key {
+            flex: 1;
+            height: 100%;
+            background: #FFF3E0; /* Creamy white */
+            border-radius: 0 0 15px 15px;
+            border: none;
+            box-shadow: 
+                inset 0 -10px 0 rgba(0,0,0,0.1), /* 3D depth */
+                0 5px 10px rgba(0,0,0,0.2);     /* Drop shadow */
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 20px;
+            font-weight: bold;
+            color: #8D6E63;
+            font-size: 1.2rem;
+            transition: transform 0.1s, background 0.1s;
+        }
+
+        .white-key:active, .white-key.active {
+            transform: scale(0.95);
+            background: #FFE0B2;
+            box-shadow: inset 0 -5px 0 rgba(0,0,0,0.1);
+        }
+
+        /* Black keys overlay */
+        .black-key {
+            position: absolute;
+            width: 8%; /* Relative to container width */
+            height: 60%;
+            background: linear-gradient(180deg, #424242 0%, #212121 100%);
+            border-radius: 0 0 10px 10px;
+            z-index: 2;
+            box-shadow: 
+                inset 0 -5px 0 rgba(255,255,255,0.2), 
+                2px 2px 5px rgba(0,0,0,0.5);
+            transition: transform 0.1s;
+            /* Centered on the gap between white keys */
+        }
+
+        .black-key:active, .black-key.active {
+            transform: scaleY(0.95) translateY(2px);
+            background: #000;
+        }
+
+        /* Stickers on keys */
+        .key-sticker {
+            font-size: 30px;
+            margin-bottom: 5px;
+            pointer-events: none;
+        }
+
+        /* HINT GLOW EFFECT */
+        .hint-glow {
+            box-shadow: 0 0 20px 5px #ff5733 !important;
+            border: 3px solid #ff5733 !important;
+            animation: pulseHint 1s infinite alternate;
+        }
+        
+        @keyframes pulseHint {
+            from { filter: brightness(1); }
+            to { filter: brightness(1.2); }
+        }
+
+        /* === 5. OVERLAYS === */
+        #start-overlay, #victory-overlay, #mission-menu {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            display: none; /* Toggled by JS */
+        }
+
+        /* Allow start overlay to show initially if needed, logic inside JS */
+        
+        .overlay-content {
+            background: white;
+            padding: 30px;
+            border-radius: 30px;
+            text-align: center;
+            animation: bounceIn 0.5s;
+            border: 5px solid #00BCD4;
+        }
+
+        #start-overlay { display: flex; } /* Initial state */
+
+        h1 { margin: 0 0 20px 0; color: #00BCD4; font-size: 40px; }
+        
+        .big-btn {
+            background: linear-gradient(to bottom, #4CAF50, #2E7D32);
+            border: none;
+            padding: 15px 40px;
+            color: white;
+            font-size: 28px;
+            border-radius: 50px;
+            box-shadow: 0 8px 0 #1B5E20;
+            cursor: pointer;
+        }
+        .big-btn:active { transform: translateY(8px); box-shadow: none; }
+
+        /* Mission Menu Items */
+        .mission-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .mission-item {
+            padding: 15px;
+            border-radius: 15px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* PARTICLES */
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            animation: flyUp 1s ease-out forwards;
+            font-size: 24px;
+            z-index: 50;
+        }
+        @keyframes flyUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PORTRAIT LOCK -->
+    <div id="portrait-warning">
+        <div class="rotate-anim">🐢</div>
+        <div id="portrait-text">Xoay ngang điện thoại để chơi nào bé ơi!</div>
+    </div>
+
+    <!-- GAME AREA -->
+    <div id="game-container">
+        <header>
+            <div class="candy-score">
+                <span>🍬</span>
+                <span id="score-text">0</span>
+            </div>
+            <div class="current-mission-display" id="mission-display">Tự Do</div>
+            <button class="mission-btn" onclick="openMissionMenu()">⭐ Nhiệm Vụ</button>
+        </header>
+
+        <div class="piano-wrapper" id="piano-area">
+            <div id="piano">
+                <!-- KEYS Generated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- START OVERLAY -->
+    <div id="start-overlay">
+        <div class="overlay-content">
+            <h1>Piano Kids 🎹</h1>
+            <p style="font-size: 1.2rem; margin-bottom: 20px; color: #666;">Chạm vào màn hình để bắt đầu!</p>
+            <button class="big-btn" onclick="startGame()">▶️ CHƠI NGAY</button>
+        </div>
+    </div>
+
+    <!-- MISSION SELECTION OVERLAY -->
+    <div id="mission-menu">
+        <div class="overlay-content" style="max-width: 80%;">
+            <h2 style="color: #FF9800; margin:0;">Chọn Hợp Âm</h2>
+            <div class="mission-grid" id="mission-list">
+                <!-- Generated by JS -->
+            </div>
+            <button class="mission-btn" style="margin-top: 20px; background: #9E9E9E;" onclick="closeMissionMenu()">Đóng</button>
+        </div>
+    </div>
+
+    <!-- VICTORY OVERLAY -->
+    <div id="victory-overlay" style="background: rgba(0,0,0,0.6);">
+        <div class="overlay-content" style="border-color: #FFEB3B;">
+            <div style="font-size: 60px;">🎉</div>
+            <h1 style="color: #FFC107;">GIỎI QUÁ!</h1>
+            <p>Bé nhận được 5 cái kẹo!</p>
+            <button class="big-btn" onclick="closeVictory()">Tiếp Tục</button>
+        </div>
+    </div>
+
+<script>
+    // === 1. DATA & CONFIG ===
+    // Config following user requirements strictly in logic, consistent JS syntax
+    // Using standard C, D, E, F, G, A, B keys
+    // White Keys: C4, D4, E4, F4, G4, A4, B4, C5 (8 keys)
+    // Black Keys: C#4 (Db4), D#4 (Eb4), F#4 (Gb4), G#4 (Ab4), A#4 (Bb4)
+    
+    // Note: Tone.js uses # for sharp.
+    
+    const KEYS_DATA = [
+        // White keys
+        { note: "C4", type: "white", sticker: "🐱", label: "C" },
+        { note: "D4", type: "white", sticker: "🐶", label: "D" },
+        { note: "E4", type: "white", sticker: "🐭", label: "E" },
+        { note: "F4", type: "white", sticker: "🐸", label: "F" },
+        { note: "G4", type: "white", sticker: "🐯", label: "G" },
+        { note: "A4", type: "white", sticker: "🦆", label: "A" },
+        { note: "B4", type: "white", sticker: "🐻", label: "B" },
+        { note: "C5", type: "white", sticker: "🐰", label: "C" }
+    ];
+
+    // Black keys positions (relative % left of container)
+    // Based on standard layout.
+    // C# is between C and D.
+    const BLACK_KEYS_DATA = [
+        { note: "C#4", left: 10 }, 
+        { note: "D#4", left: 24.5 },
+        // Gap between E and F
+        { note: "F#4", left: 52 },
+        { note: "G#4", left: 66 },
+        { note: "A#4", left: 80 }
+    ];
+
+    const CHORD_MISSIONS = [
+        { name: "C Major", notes: ["C4", "E4", "G4"], color: "#FF5733" },
+        { name: "D Major", notes: ["D4", "F#4", "A4"], color: "#FFC300" },
+        { name: "E Major", notes: ["E4", "G#4", "B4"], color: "#DAF7A6" },
+        { name: "F Major", notes: ["F4", "A4", "C5"], color: "#33FF57" },
+        { name: "G Major", notes: ["G4", "B4", "D4"], color: "#3357FF" }
+        // Simplification for screen space
+    ];
+
+    // === 2. STATE & AUDIO ===
+    let audioContextStarted = false;
+    let candyCount = 0;
+    let currentMission = null;
+    let activeKeys = new Set();
+    const synth = new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: "triangle" },
+        envelope: { attack: 0.01, decay: 0.1, sustain: 0.3, release: 1 }
+    }).toDestination();
+
+    // === 3. INIT & RENDER ===
+    function init() {
+        const pianoEl = document.getElementById("piano");
+        
+        // Render White Keys
+        KEYS_DATA.forEach(k => {
+            const btn = document.createElement("div");
+            btn.className = "white-key";
+            btn.dataset.note = k.note;
+            btn.innerHTML = `<div class="key-sticker">${k.sticker}</div><div>${k.label}</div>`;
+            setupTouchEvents(btn, k.note);
+            pianoEl.appendChild(btn);
+        });
+
+        // Render Black Keys
+        const pianoRect = pianoEl.getBoundingClientRect();
+        
+        BLACK_KEYS_DATA.forEach(k => {
+            const btn = document.createElement("div");
+            btn.className = "black-key";
+            btn.dataset.note = k.note;
+            btn.style.left = k.left + "%";
+            setupTouchEvents(btn, k.note);
+            // Black keys appended to piano container, Absolute pos handles placement
+            pianoEl.appendChild(btn);
+        });
+
+        renderMissionMenu();
+    }
+
+    function setupTouchEvents(element, note) {
+        // Touch Start
+        element.addEventListener("touchstart", (e) => {
+            e.preventDefault(); // Prevent scrolling/zoom
+            playNote(note);
+            element.classList.add("active");
+            activeKeys.add(note);
+            checkChord();
+            createParticle(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+        }, { passive: false });
+
+        // Touch End
+        element.addEventListener("touchend", (e) => {
+            e.preventDefault();
+            stopNote(note);
+            element.classList.remove("active");
+            activeKeys.delete(note);
+        });
+        
+        // Mouse for testing on PC
+        element.addEventListener("mousedown", (e) => {
+             playNote(note);
+             element.classList.add("active");
+             activeKeys.add(note);
+             checkChord();
+             createParticle(e.clientX, e.clientY);
+        });
+        element.addEventListener("mouseup", () => {
+             stopNote(note);
+             element.classList.remove("active");
+             activeKeys.delete(note);
+        });
+        element.addEventListener("mouseleave", () => {
+             stopNote(note);
+             element.classList.remove("active");
+             activeKeys.delete(note);
+        });
+    }
+
+    // === 4. CORE LOGIC ===
+    async function startGame() {
+        await Tone.start();
+        audioContextStarted = true;
+        document.getElementById("start-overlay").style.display = "none";
+    }
+
+    function playNote(note) {
+        if (!audioContextStarted) return;
+        synth.triggerAttack(note);
+    }
+
+    function stopNote(note) {
+        synth.triggerRelease(note);
+    }
+
+    function openMissionMenu() {
+        document.getElementById("mission-menu").style.display = "flex";
+    }
+
+    function closeMissionMenu() {
+        document.getElementById("mission-menu").style.display = "none";
+    }
+
+    function renderMissionMenu() {
+        const list = document.getElementById("mission-list");
+        list.innerHTML = "";
+        CHORD_MISSIONS.forEach(m => {
+            const btn = document.createElement("div");
+            btn.className = "mission-item";
+            btn.style.backgroundColor = m.color;
+            btn.innerText = m.name;
+            btn.onclick = () => selectMission(m);
+            list.appendChild(btn);
+        });
+    }
+
+    function selectMission(mission) {
+        currentMission = mission;
+        document.getElementById("mission-display").innerText = mission.name;
+        document.getElementById("mission-display").style.backgroundColor = mission.color;
+        closeMissionMenu();
+        highlightMissionKeys();
+    }
+
+    function highlightMissionKeys() {
+        // Remove old hints
+        document.querySelectorAll(".hint-glow").forEach(el => {
+            el.classList.remove("hint-glow");
+            el.style.boxShadow = ""; 
+            el.style.borderColor = "";
+        });
+
+        if (!currentMission) return;
+
+        // Add new hints
+        currentMission.notes.forEach(note => {
+            const keyEl = document.querySelector(`[data-note="${note}"]`);
+            if (keyEl) {
+                keyEl.classList.add("hint-glow");
+                keyEl.style.borderColor = currentMission.color;
+                // Force color to inline to override CSS priority if needed
+                // But class is specific enough with !important
+            }
+        });
+    }
+
+    function checkChord() {
+        if (!currentMission) return;
+
+        // Check if all mission notes are currently active
+        // Logic: activeKeys has all items in mission.notes
+        const allNotesPressed = currentMission.notes.every(note => activeKeys.has(note));
+        
+        if (allNotesPressed) {
+            handleVictory();
+        }
+    }
+
+    function handleVictory() {
+        // Prevent spam
+        if (document.getElementById("victory-overlay").style.display === "flex") return;
+
+        candyCount += 5;
+        document.getElementById("score-text").innerText = candyCount;
+        
+        // Show Victory
+        const overlay = document.getElementById("victory-overlay");
+        overlay.style.display = "flex";
+        
+        // Simple confetti sound
+        const victorySynth = new Tone.Synth().toDestination();
+        const now = Tone.now();
+        victorySynth.triggerAttackRelease("C5", "8n", now);
+        victorySynth.triggerAttackRelease("E5", "8n", now + 0.1);
+        victorySynth.triggerAttackRelease("G5", "8n", now + 0.2);
+        victorySynth.triggerAttackRelease("C6", "4n", now + 0.3);
+
+        // Clear keys to prevent sticking
+        activeKeys.clear();
+        synth.releaseAll();
+    }
+
+    function closeVictory() {
+        document.getElementById("victory-overlay").style.display = "none";
+        // Optional: Reset mission or keep same
+    }
+
+    function createParticle(x, y) {
+        const particle = document.createElement("div");
+        particle.innerText = "⭐";
+        particle.className = "particle";
+        particle.style.left = (x - 10) + "px";
+        particle.style.top = (y - 30) + "px";
+        document.body.appendChild(particle);
+        
+        setTimeout(() => particle.remove(), 1000);
+    }
+
+    // Run Init
+    window.addEventListener("DOMContentLoaded", init);
+
+</script>
+</body>
+</html>
