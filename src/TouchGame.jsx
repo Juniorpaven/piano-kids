@@ -138,7 +138,7 @@ function TouchGame({ onBack }) {
     // User requested "tu not do den si 2 lan" starting from the first set.
     const pianoKeys = (() => {
         let keys = [];
-        const octaves = [3, 4]; // Octaves 3 and 4 -> C3...B3, C4...B4
+        const octaves = [4, 5]; // Octaves 4 and 5 -> C4...B4, C5...B5
         octaves.forEach(oct => {
             NOTES_CHROMATIC.forEach(n => {
                 const type = n.includes('#') ? 'black' : 'white';

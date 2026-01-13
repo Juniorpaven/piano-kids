@@ -90,7 +90,7 @@ function ForestGame({ onBack }) {
     const NOTES_CHROMATIC_KEYS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     const pianoKeys = useMemo(() => {
         let keys = [];
-        const octaves = [3, 4];
+        const octaves = [4, 5]; // Octaves 4 and 5 for consistency
         octaves.forEach(oct => {
             NOTES_CHROMATIC_KEYS.forEach(n => {
                 const type = n.includes('#') ? 'black' : 'white';

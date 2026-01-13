@@ -70,11 +70,11 @@ function MicGame({ onBack }) {
     return () => window.removeEventListener('resize', checkOrientation);
   }, []);
 
-  // GENERATE KEYS (Copy from TouchGame for consistency C3-B4)
+  // GENERATE KEYS (Copy from TouchGame for consistency C4-B5)
   const NOTES_CHROMATIC_KEYS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
   const pianoKeys = React.useMemo(() => {
     let keys = [];
-    const octaves = [3, 4];
+    const octaves = [4, 5]; // Octaves 4 and 5
     octaves.forEach(oct => {
       NOTES_CHROMATIC_KEYS.forEach(n => {
         const type = n.includes('#') ? 'black' : 'white';
@@ -241,20 +241,14 @@ function MicGame({ onBack }) {
 
   // PLAYING STATE RENDER
   return (
-    <div className={`touch-game-fullscreen ${forceRotate ? 'forced-landscape' : ''}`} style={{ background: '#2E7D32' }}>
+    <div className="touch-game-fullscreen" style={{ background: '#2E7D32' }}>
       {showConfetti && <Confetti recycle={false} numberOfPieces={300} />}
 
-      {/* Warning Overlay controlled by React */}
-      {(isPortrait && !forceRotate) && (
-        <div className="portrait-warning" style={{ display: 'flex' }}>
-          <div className="rotate-icon">📱➡️</div>
-          <h2>Vui lòng xoay ngang điện thoại!</h2>
-          <p>Hoặc ấn nút dưới để xoay ép buộc.</p>
-          <button className="btn-force-rotate" onClick={() => setForceRotate(true)}>
-            🔄 Xoay Ngang Ngay
-          </button>
-        </div>
-      )}
+      {/* Warning Overlay Controlled by CSS */}
+      <div className="portrait-warning">
+        <div className="rotate-icon">📱➡️</div>
+        <h2>Vui lòng xoay ngang điện thoại!</h2>
+      </div>
 
       <div className="glass-panel" style={{
         top: 'max(20px, env(safe-area-inset-top))',
