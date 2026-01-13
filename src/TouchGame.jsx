@@ -6,7 +6,6 @@ import './MainMenu.css';
 import KeyComponent from './components/KeyComponent';
 
 // --- DATA: SCALES & FINGERING (Verified) ---
-const SCALES = [
 // --- SONGS DATA (From Hotfix) ---
 const SONGS = [
     { name: "Đàn Gà Con", notes: ["C4", "C4", "G4", "G4", "A4", "A4", "G4", "F4", "F4", "E4", "E4", "D4", "D4", "C4"] },
