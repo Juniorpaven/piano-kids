@@ -3,23 +3,27 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Piano Kids - Hotfix V3</title>
-    <!-- PREVENT SCALING / ZOOMING ON MOBILE -->
+    <title>Piano Kids - Full Version</title>
+    <!-- PREVENT SCALING -->
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
     <!-- Tone.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
     <style>
-        /* === 1. GLOBAL RESET === */
+        /* === 1. GLOBAL & RESET === */
         * {
             box-sizing: border-box;
             touch-action: none;
-            /* Disable double-tap zoom etc */
+            /* No zoom/scroll */
             user-select: none;
             -webkit-user-select: none;
             -webkit-touch-callout: none;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
@@ -27,332 +31,566 @@
             padding: 0;
             width: 100vw;
             height: 100svh;
-            /* Safari fix */
             background-color: #222;
             overflow: hidden;
-            font-family: system-ui, -apple-system, sans-serif;
         }
 
-        /* === 2. PORTRAIT WARNING (DEFAULT: HIDDEN) === */
+        /* === 2. ORIENTATION HANDLING === */
         #portrait-warning {
             display: none;
-            /* Hidden by default */
             position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100svh;
-            background: #FFD54F;
+            width: 100%;
+            height: 100%;
+            background: #FFCA28;
             z-index: 99999;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
+            color: #D84315;
+            padding: 20px;
         }
 
-        /* SHOW WARNING ONLY ON PORTRAIT ORIENTATION */
-        @media screen and (orientation: portrait) {
-            #portrait-warning {
-                display: flex !important;
-            }
-
-            #game-container {
-                display: none !important;
-            }
+        .rotate-anim {
+            font-size: 80px;
+            animation: spin 2s infinite ease-in-out;
+            margin-bottom: 20px;
         }
 
-        /* === 3. GAME CONTAINER (FULLSCREEN LANDSCAPE) === */
-        #game-container {
-            display: flex;
-            flex-direction: column;
-            width: 100vw;
-            height: 100svh;
-            background: linear-gradient(to bottom, #81D4FA, #E1F5FE);
-        }
-
-        /* HEADER */
-        header {
-            height: 60px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px;
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(5px);
-        }
-
-        .score-board {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #E91E63;
-            background: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        /* PIANO AREA - FLEXBOX LAYOUT (NO GRID) */
-        #piano-area {
-            flex: 1;
-            /* Fill remaining vertical space */
-            position: relative;
-            display: flex;
-            /* White keys horizontal */
-            padding: 0;
-            margin: 0;
-        }
-
-        /* WHITE KEYS */
-        .white-key {
-            flex: 1;
-            /* Distribute width equally (7 keys) */
-            height: 100%;
-            background: #FFF;
-            border: 1px solid #ccc;
-            /* Subtle separator */
-            border-top: none;
-            border-radius: 0 0 10px 10px;
-            position: relative;
-            /* For sticker placement */
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            align-items: center;
-            padding-bottom: 20px;
-            box-shadow: inset 0 -10px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        .white-key:active,
-        .white-key.active {
-            background: #E0E0E0;
-            transform: scale(0.98);
-        }
-
-        .sticker {
-            font-size: 2rem;
-            margin-bottom: 10px;
-            pointer-events: none;
-        }
-
-        .note-label {
-            font-weight: bold;
-            color: #555;
-            font-size: 1.2rem;
-            pointer-events: none;
-        }
-
-        /* BLACK KEYS - ABSOLUTE POSITIONING */
-        /* Width approx 60% of white key. White Key is 100/7 = ~14.28% */
-        /* Black key width = ~8-9% */
-        .black-key {
-            position: absolute;
-            top: 0;
-            height: 60%;
-            width: 8%;
-            background: linear-gradient(#333, #000);
-            border-radius: 0 0 8px 8px;
-            z-index: 20;
-            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
-            pointer-events: auto;
-            /* Ensure clickable */
-        }
-
-        .black-key:active,
-        .black-key.active {
-            background: #222;
-            transform: scale(0.95);
-        }
-
-        /* POSITIONS CALCULATED (14.28% per white key) */
-        /* C# between 1st(0%) and 2nd(14.28%) -> ~10% center */
-        .bk-0 {
-            left: 10%;
-        }
-
-        /* C# */
-        .bk-1 {
-            left: 24%;
-        }
-
-        /* D# */
-        /* Gap E-F */
-        .bk-2 {
-            left: 53%;
-        }
-
-        /* F# */
-        .bk-3 {
-            left: 67%;
-        }
-
-        /* G# */
-        .bk-4 {
-            left: 81.5%;
-        }
-
-        /* A# */
-
-        /* PARTICLES */
-        .particle {
-            position: absolute;
-            font-size: 24px;
-            pointer-events: none;
-            animation: floatUp 1s forwards;
-            z-index: 100;
-        }
-
-        @keyframes floatUp {
-            to {
-                transform: translateY(-100px);
-                opacity: 0;
-            }
-        }
-
-        /* ROTATION ANIMATION */
-        @keyframes rotateIcon {
+        @keyframes spin {
 
             0%,
             100% {
                 transform: rotate(0deg);
             }
 
-            25% {
+            50% {
                 transform: rotate(-90deg);
             }
         }
 
-        .rotate-icon {
-            font-size: 4rem;
-            animation: rotateIcon 2s infinite;
+        @media screen and (orientation: portrait) {
+            #portrait-warning {
+                display: flex !important;
+            }
+
+            #game-app {
+                display: none !important;
+            }
+        }
+
+        /* === 3. MAIN GAME APP === */
+        #game-app {
+            display: flex;
+            flex-direction: column;
+            width: 100vw;
+            height: 100svh;
+            background: linear-gradient(180deg, #4FC3F7 0%, #E1F5FE 100%);
+        }
+
+        /* HEADER / TOOLBAR */
+        #toolbar {
+            height: 50px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .tool-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            background: #fff;
+            border: none;
+            border-radius: 20px;
+            padding: 5px 15px;
+            font-weight: bold;
+            color: #555;
+            box-shadow: 0 2px 0 #ddd;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+
+        .btn:active {
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+
+        .btn.primary {
+            background: #FF7043;
+            color: white;
+            box-shadow: 0 2px 0 #D84315;
+        }
+
+        #score-display {
+            font-size: 1.2rem;
+            color: #E91E63;
+            font-weight: 900;
+            background: white;
+            padding: 2px 12px;
+            border-radius: 12px;
+        }
+
+        /* === 4. PIANO KEYBOARD === */
+        #keyboard-area {
+            flex: 1;
+            position: relative;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            width: 100%;
+        }
+
+        /* WHITE KEYS - 14 KEYS TOTAL (2 OCTAVES) */
+        .w-key {
+            flex: 1;
+            /* Auto distribute 1/14 width */
+            height: 100%;
+            background: white;
+            border-radius: 0 0 8px 8px;
+            border: 1px solid #cce;
+            border-top: none;
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 10px;
+            color: #888;
+            font-weight: bold;
+            font-size: 0.9rem;
+            box-shadow: inset 0 -8px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .w-key.active {
+            background: #f0f0f0;
+            transform: scale(0.98);
+            transform-origin: top;
+            background: linear-gradient(to bottom, #fff, #FFEB3B);
+        }
+
+        .w-key.guide-hint {
+            background: #B3E5FC;
+            animation: glow 1s infinite alternate;
+        }
+
+        .key-sticker {
+            font-size: 1.2rem;
+            margin-top: auto;
+            margin-bottom: 2px;
+        }
+
+        .key-label {
+            margin-bottom: 5px;
+            font-size: 0.8rem;
+        }
+
+        /* BLACK KEYS */
+        .b-key {
+            position: absolute;
+            top: 0;
+            height: 55%;
+            width: 4.5%;
+            /* Calculated relative to 100vw */
+            background: linear-gradient(to bottom, #333, #000);
+            border-radius: 0 0 5px 5px;
+            z-index: 20;
+            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .b-key.active {
+            background: #222;
+            transform: scaleY(0.96);
+            border-bottom: 3px solid #E91E63;
+        }
+
+        .b-key.guide-hint {
+            border: 2px solid #00BCD4;
+            background: #4DD0E1;
+        }
+
+        /* KEYBOARD OVERLAY (Song Selection) */
+        #overlay-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 200;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .menu-box {
+            background: white;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .song-list {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .song-item {
+            background: #f5f5f5;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .song-item:hover {
+            background: #E1F5FE;
+            color: #0277BD;
+        }
+
+        .song-item span {
+            pointer-events: none;
+        }
+
+        /* ANIMATIONS */
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 5px #03A9F4;
+            }
+
+            to {
+                box-shadow: 0 0 20px #03A9F4;
+            }
+        }
+
+        @keyframes pop {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            font-size: 20px;
+            z-index: 50;
+            animation: floatUp 1s forwards;
+        }
+
+        @keyframes floatUp {
+            to {
+                transform: translateY(-80px);
+                opacity: 0;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <!-- SCREEN 1: PORTRAIT WARNING -->
+    <!-- PORTRAIT WARNING -->
     <div id="portrait-warning">
-        <div class="rotate-icon">📱</div>
-        <h1 style="color: #E65100;">Xoay Ngang Điện Thoại</h1>
-        <p>Để chơi đàn Piano nhé!</p>
+        <div class="rotate-anim">📱</div>
+        <h2>Vui lòng xoay ngang!</h2>
     </div>
 
-    <!-- SCREEN 2: GAME -->
-    <div id="game-container">
-        <header>
-            <div class="score-board">🍬 <span id="candy-val">0</span></div>
-            <div style="font-weight:bold; color: #0277BD; font-size: 1.2rem;">Piano Kids 🎵</div>
-        </header>
+    <!-- GAME APP -->
+    <div id="game-app">
+        <!-- TOOLBAR -->
+        <div id="toolbar">
+            <div class="tool-group">
+                <div id="score-display">🍬 0</div>
+                <button class="btn" onclick="toggleMenu()"><i class="fas fa-music"></i> Chọn Bài</button>
+            </div>
+            <div class="tool-group">
+                <div id="current-song-status" style="color: #0277BD; font-weight: bold;">Tự Do</div>
+            </div>
+            <div class="tool-group">
+                <button class="btn primary" onclick="autoPlayDemo()"><i class="fas fa-play"></i> Nghe Thử</button>
+            </div>
+        </div>
 
-        <div id="piano-area">
-            <!-- WHITE KEYS (7) -->
-            <!-- C4 -->
-            <div class="white-key" data-note="C4" ontouchstart="play(this, 'C4')">
-                <div class="sticker">🐱</div>
-                <div class="note-label">Do</div>
-            </div>
-            <!-- D4 -->
-            <div class="white-key" data-note="D4" ontouchstart="play(this, 'D4')">
-                <div class="sticker">🐶</div>
-                <div class="note-label">Re</div>
-            </div>
-            <!-- E4 -->
-            <div class="white-key" data-note="E4" ontouchstart="play(this, 'E4')">
-                <div class="sticker">🐭</div>
-                <div class="note-label">Mi</div>
-            </div>
-            <!-- F4 -->
-            <div class="white-key" data-note="F4" ontouchstart="play(this, 'F4')">
-                <div class="sticker">🐸</div>
-                <div class="note-label">Fa</div>
-            </div>
-            <!-- G4 -->
-            <div class="white-key" data-note="G4" ontouchstart="play(this, 'G4')">
-                <div class="sticker">🐯</div>
-                <div class="note-label">Sol</div>
-            </div>
-            <!-- A4 -->
-            <div class="white-key" data-note="A4" ontouchstart="play(this, 'A4')">
-                <div class="sticker">🦆</div>
-                <div class="note-label">La</div>
-            </div>
-            <!-- B4 -->
-            <div class="white-key" data-note="B4" ontouchstart="play(this, 'B4')">
-                <div class="sticker">🐻</div>
-                <div class="note-label">Si</div>
-            </div>
+        <!-- PIANO KEYBOARD -->
+        <div id="keyboard-area">
+            <!-- OCTAVE 1 (C4-B4) -->
+            <div class="w-key" data-note="C4" data-label="Do"></div>
+            <div class="w-key" data-note="D4" data-label="Re"></div>
+            <div class="w-key" data-note="E4" data-label="Mi"></div>
+            <div class="w-key" data-note="F4" data-label="Fa"></div>
+            <div class="w-key" data-note="G4" data-label="Sol"></div>
+            <div class="w-key" data-note="A4" data-label="La"></div>
+            <div class="w-key" data-note="B4" data-label="Si"></div>
 
-            <!-- BLACK KEYS (5) -->
-            <div class="black-key bk-0" ontouchstart="play(this, 'C#4')"></div>
-            <div class="black-key bk-1" ontouchstart="play(this, 'D#4')"></div>
-            <div class="black-key bk-2" ontouchstart="play(this, 'F#4')"></div>
-            <div class="black-key bk-3" ontouchstart="play(this, 'G#4')"></div>
-            <div class="black-key bk-4" ontouchstart="play(this, 'A#4')"></div>
+            <!-- OCTAVE 2 (C5-B5) -->
+            <div class="w-key" data-note="C5" data-label="Do"></div>
+            <div class="w-key" data-note="D5" data-label="Re"></div>
+            <div class="w-key" data-note="E5" data-label="Mi"></div>
+            <div class="w-key" data-note="F5" data-label="Fa"></div>
+            <div class="w-key" data-note="G5" data-label="Sol"></div>
+            <div class="w-key" data-note="A5" data-label="La"></div>
+            <div class="w-key" data-note="B5" data-label="Si"></div>
+
+            <!-- BLACK KEYS (Calculated % Positions) -->
+            <!-- 14 White Keys total. Each is ~7.14% width -->
+            <!-- Octave 1 -->
+            <div class="b-key" data-note="C#4" style="left: 5%;"></div> <!-- 0.7*7.14 -->
+            <div class="b-key" data-note="D#4" style="left: 12.1%;"></div> <!-- 1.7*7.14 -->
+            <div class="b-key" data-note="F#4" style="left: 26.4%;"></div> <!-- 3.7*7.14 -->
+            <div class="b-key" data-note="G#4" style="left: 33.5%;"></div> <!-- 4.7*7.14 -->
+            <div class="b-key" data-note="A#4" style="left: 40.7%;"></div> <!-- 5.7*7.14 -->
+
+            <!-- Octave 2 (+50% offset) -->
+            <div class="b-key" data-note="C#5" style="left: 55%;"></div>
+            <div class="b-key" data-note="D#5" style="left: 62.1%;"></div>
+            <div class="b-key" data-note="F#5" style="left: 76.4%;"></div>
+            <div class="b-key" data-note="G#5" style="left: 83.5%;"></div>
+            <div class="b-key" data-note="A#5" style="left: 90.7%;"></div>
         </div>
     </div>
 
-    <script>
-        // === AUDIO ENGINE ===
-        let synth;
-        let candy = 0;
-        let isStarted = false;
+    <!-- SONG MENU OVERLAY -->
+    <div id="overlay-menu">
+        <div class="menu-box">
+            <h2>🎵 Chọn Bài Hát</h2>
+            <ul class="song-list" id="song-list-ul">
+                <!-- JS will fill this -->
+            </ul>
+            <button class="btn primary" onclick="toggleMenu()"
+                style="width: 100%; justify-content: center;">Đóng</button>
+        </div>
+    </div>
 
-        async function initAudio() {
-            if (isStarted) return;
-            await Tone.start();
-            synth = new Tone.PolySynth(Tone.Synth).toDestination();
-            isStarted = true;
-            console.log("Audio Started");
+    <!-- MAIN SCRIPT -->
+    <script>
+        // === DATA ===
+        // Stickers mapping for C, D, E...
+        const STICKERS = { 'C': '🐱', 'D': '🐶', 'E': '🐭', 'F': '🐸', 'G': '🐯', 'A': '🦆', 'B': '🐻' };
+
+        const SONGS = [
+            { name: "Đàn Gà Con", notes: ["C4", "C4", "G4", "G4", "A4", "A4", "G4", "F4", "F4", "E4", "E4", "D4", "D4", "C4"] },
+            { name: "Kìa Con Bướm Vàng", notes: ["C4", "D4", "E4", "C4", "C4", "D4", "E4", "C4", "E4", "F4", "G4", "E4", "F4", "G4"] },
+            { name: "Happy Birthday", notes: ["C4", "C4", "D4", "C4", "F4", "E4", "C4", "C4", "D4", "C4", "G4", "F4"] },
+            { name: "Twinkle Star", notes: ["C4", "C4", "G4", "G4", "A4", "A4", "G4", "F4", "F4", "E4", "E4", "D4", "D4", "C4"] },
+            { name: "Jingle Bells", notes: ["E4", "E4", "E4", "E4", "E4", "E4", "E4", "G4", "C4", "D4", "E4"] }
+        ];
+
+        // === STATE ===
+        let synth;
+        let isAudioInit = false;
+        let candy = 0;
+        let currentSong = null;
+        let currentNoteIndex = 0;
+        let isGuidanceMode = false; // Player plays, hints shown
+        let isDemoMode = false;     // Auto play
+
+        // === INIT ===
+        window.onload = () => {
+            renderKeys();
+            renderSongList();
+        };
+
+        function renderKeys() {
+            // Fill content for White Keys
+            const wKeys = document.querySelectorAll('.w-key');
+            wKeys.forEach(el => {
+                const note = el.dataset.note;
+                const label = el.dataset.label;
+                el.innerHTML = `<div class="key-sticker">${STICKERS[note.charAt(0)]}</div><div class="key-label">${label}</div>`;
+                bindEvents(el, note);
+            });
+
+            // Bind Black Keys
+            document.querySelectorAll('.b-key').forEach(el => bindEvents(el, el.dataset.note));
         }
 
-        // === PLAY LOGIC ===
-        function play(el, note) {
-            // Init audio context on first touch if needed
-            if (!isStarted) initAudio();
+        function bindEvents(el, note) {
+            // Touch & Click
+            const start = (e) => {
+                if (e.cancelable) e.preventDefault();
+                playNote(note);
+                highlightKey(el);
+                checkGuidance(note);
+                spawnParticle(e, el);
+            };
 
-            // Visual active state
+            el.addEventListener('touchstart', start, { passive: false });
+            el.addEventListener('mousedown', start);
+        }
+
+        // === AUDIO & PLAY ===
+        async function initAudio() {
+            if (isAudioInit) return;
+            await Tone.start();
+            synth = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: "triangle" },
+                envelope: { attack: 0.01, decay: 0.1, sustain: 0.1, release: 1 }
+            }).toDestination();
+            isAudioInit = true;
+        }
+
+        function playNote(note) {
+            initAudio();
+            if (synth) synth.triggerAttackRelease(note, "8n");
+        }
+
+        function highlightKey(el) {
             el.classList.add('active');
+            setTimeout(() => el.classList.remove('active'), 200);
+        }
 
-            // Audio Play
-            if (synth) {
-                synth.triggerAttackRelease(note, "8n");
+        function spawnParticle(e, el) {
+            const rect = el.getBoundingClientRect();
+            // Get center of element if touch info missing (like demo mode)
+            let x = rect.left + rect.width / 2;
+            let y = rect.top + 20;
+
+            // If actual touch/mouse event
+            if (e && (e.clientX || (e.changedTouches && e.changedTouches[0]))) {
+                const clientX = e.clientX || e.changedTouches[0].clientX;
+                const clientY = e.clientY || e.changedTouches[0].clientY;
+                x = clientX; y = clientY;
             }
 
-            // GameFi
-            spawnParticle(el);
-
-            // Release visual after short delay
-            setTimeout(() => {
-                el.classList.remove('active');
-            }, 200);
-        }
-
-        function spawnParticle(el) {
-            const rect = el.getBoundingClientRect();
             const p = document.createElement('div');
             p.innerText = '⭐';
             p.className = 'particle';
-            // Center particle on clicked element
-            p.style.left = (rect.left + rect.width / 2 - 10) + 'px';
-            p.style.top = (rect.top - 20) + 'px';
+            p.style.left = (x - 10) + 'px';
+            p.style.top = (y - 30) + 'px';
             document.body.appendChild(p);
-
-            // Candy logic (simple count)
-            candy++;
-            document.getElementById('candy-val').innerText = candy;
 
             setTimeout(() => p.remove(), 1000);
         }
 
-        // Prevent Context Menu
-        document.addEventListener('contextmenu', event => event.preventDefault());
+        // === GAME MODES ===
+        function renderSongList() {
+            const list = document.getElementById('song-list-ul');
+            SONGS.forEach((song, idx) => {
+                const li = document.createElement('li');
+                li.className = 'song-item';
+                li.innerHTML = `<span>${idx + 1}. ${song.name}</span> <i class="fas fa-play-circle"></i>`;
+                li.onclick = () => startGuidance(song);
+                list.appendChild(li);
+            });
+        }
 
-        // Handle Resize / Orientation
-        window.addEventListener('resize', () => {
-            // CSS handles Media Query, but we can log dimensions
-            console.log(window.innerWidth, window.innerHeight);
-        });
+        function toggleMenu() {
+            const menu = document.getElementById('overlay-menu');
+            menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function startGuidance(song) {
+            currentSong = song;
+            currentNoteIndex = 0;
+            isGuidanceMode = true;
+            isDemoMode = false;
+
+            document.getElementById('current-song-status').innerText = `Đang tập: ${song.name}`;
+            toggleMenu();
+            showNextHint();
+        }
+
+        function showNextHint() {
+            // Clear old hints
+            document.querySelectorAll('.guide-hint').forEach(k => k.classList.remove('guide-hint'));
+
+            if (!currentSong || currentNoteIndex >= currentSong.notes.length) {
+                // Song finished
+                document.getElementById('current-song-status').innerText = "Hoàn thành! 🎉";
+                currentSong = null;
+                isGuidanceMode = false;
+                addScore(10);
+                setTimeout(() => document.getElementById('current-song-status').innerText = "Tự Do", 3000);
+                return;
+            }
+
+            const noteToHit = currentSong.notes[currentNoteIndex];
+            const keyEl = document.querySelector(`[data-note="${noteToHit}"]`);
+            if (keyEl) keyEl.classList.add('guide-hint');
+        }
+
+        function checkGuidance(playedNote) {
+            if (!isGuidanceMode || !currentSong) {
+                // Free play scoring
+                addScore(1);
+                return;
+            }
+
+            const expectedNote = currentSong.notes[currentNoteIndex];
+            if (playedNote === expectedNote) {
+                // Correct!
+                currentNoteIndex++;
+                addScore(2);
+                showNextHint();
+            }
+        }
+
+        function addScore(pts) {
+            candy += pts;
+            document.getElementById('score-display').innerText = `🍬 ${candy}`;
+        }
+
+        // === AUTO DEMO ===
+        function autoPlayDemo() {
+            if (isDemoMode) return;
+
+            // Pick random song
+            const song = SONGS[Math.floor(Math.random() * SONGS.length)];
+            document.getElementById('current-song-status').innerText = `Nghe thử: ${song.name}`;
+            isDemoMode = true;
+
+            let i = 0;
+            const interval = setInterval(() => {
+                if (i >= song.notes.length) {
+                    clearInterval(interval);
+                    isDemoMode = false;
+                    document.getElementById('current-song-status').innerText = "Tự Do";
+                    return;
+                }
+
+                const note = song.notes[i];
+                playNote(note);
+
+                // Visual
+                const keyEl = document.querySelector(`[data-note="${note}"]`);
+                if (keyEl) {
+                    highlightKey(keyEl);
+                    spawnParticle(null, keyEl);
+                }
+
+                i++;
+            }, 600); // Speed
+        }
+
     </script>
 </body>
 
