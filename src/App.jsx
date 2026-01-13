@@ -51,18 +51,18 @@ function App() {
       {/* FOOTER MENU */}
       <div className="footer-menu">
         <button className="menu-item" onClick={() => setView('MIC')}>
-          <div className="menu-icon-box">⭐</div>
-          <span>Fun</span>
+          <div className="menu-icon-box" style={{ background: '#4FC3F7', boxShadow: '0 4px 0 #0288D1' }}>🎤</div>
+          <span style={{ fontWeight: 'bold', color: 'white' }}>Thám Hiểm</span>
         </button>
 
         <button className="menu-item active" onClick={() => setView('TOUCH')}>
-          <div className="menu-icon-box">🎹</div>
-          <span>Piano</span>
+          <div className="menu-icon-box" style={{ background: '#EC407A', boxShadow: '0 4px 0 #C2185B' }}>🎹</div>
+          <span style={{ fontWeight: 'bold', color: 'white' }}>Đảo Kẹo</span>
         </button>
 
         <button className="menu-item" onClick={() => setView('FOREST')}>
-          <div className="menu-icon-box">🏆</div>
-          <span>Wins</span>
+          <div className="menu-icon-box" style={{ background: '#66BB6A', boxShadow: '0 4px 0 #388E3C' }}>🌲</div>
+          <span style={{ fontWeight: 'bold', color: 'white' }}>Rừng Xanh</span>
         </button>
       </div>
     </div>
