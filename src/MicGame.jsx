@@ -219,7 +219,10 @@ function MicGame({ onBack }) {
                   {s.root}
                 </div>
               </div>
-              <div className="flower-label" style={{ marginTop: 5, color: '#006064', fontSize: '1rem', width: 'auto', background: 'rgba(255,255,255,0.7)', borderRadius: 10, padding: '2px 8px' }}>{s.name}</div>
+              <div className="flower-label" style={{ marginTop: 5, color: '#006064', fontSize: '1rem', width: 'auto', background: 'rgba(255,255,255,0.7)', borderRadius: 10, padding: '2px 8px', textAlign: 'center' }}>
+                {s.name}
+                <div style={{ fontSize: '0.6rem', color: '#004D40', fontWeight: 'normal' }}>Âm Giai Trưởng</div>
+              </div>
             </div>
           ))}
         </div>
