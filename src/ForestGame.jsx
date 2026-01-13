@@ -241,6 +241,7 @@ function ForestGame({ onBack }) {
     // --- RENDER ---
 
     // SETUP SCREEN (Reps)
+    // SETUP SCREEN (Reps) - THEMED "APPLE HARVEST"
     if (gameState === 'SETUP') {
         return (
             <div className="forest-container">
@@ -248,15 +249,17 @@ function ForestGame({ onBack }) {
                     <button className="btn-home-circle" onClick={onBack}>🏠</button>
                 </div>
                 <div className="setup-overlay">
-                    <h1 style={{ fontSize: '3rem', color: '#FFEB3B' }}>🌲 Rừng Xanh 🌲</h1>
-                    <p>Chọn số lần tập (Reps) để bắt đầu:</p>
-                    <div className="rep-grid">
+                    <h1 style={{ fontSize: '3rem', color: '#FFEB3B', textShadow: '0 4px 0 #33691E' }}>� Thu Hoạch Táo �</h1>
+                    <p style={{ color: '#C8E6C9', fontSize: '1.2rem' }}>Chọn số quả táo (lần tập) bé muốn hái nhé:</p>
+
+                    <div className="apple-grid-container">
                         {[10, 20, 30, 40, 50, 100].map(num => (
-                            <button key={num} className="rep-btn" onClick={() => {
+                            <button key={num} className="apple-btn" onClick={() => {
                                 setTargetReps(num);
                                 setGameState('SELECT_SCALE');
                             }}>
-                                {num} 🍎
+                                <span className="apple-number">{num}</span>
+                                <span className="apple-label">Quả</span>
                             </button>
                         ))}
                     </div>
@@ -365,33 +368,43 @@ function ForestGame({ onBack }) {
 
             {/* CHARACTER */}
             <div className={`forest-character ${gameState === 'ERROR' ? 'shake-anim' : ''}`}
-                style={{ left: `${10 + (stepIndex / gameSequence.length) * 80}%`, transition: 'left 0.5s' }}>
+                style={{
+                    left: `${10 + (stepIndex / gameSequence.length) * 80}%`,
+                    transition: 'left 0.5s',
+                    bottom: '200px' // Lift monkey up so keyboard fits
+                }}>
                 <div className="monkey-avatar">
-                    {gameState === 'ERROR' ? '🙈' : (gameState === 'WIN' ? '🏆' : '🐵')}
+                    <span style={{ fontSize: '5rem' }}>
+                        {gameState === 'ERROR' ? '🙈' : (gameState === 'WIN' ? '🏆' : '🐵')}
+                    </span>
+                </div>
+                {/* Speech Bubble for current note */}
+                <div className="speech-bubble" style={{ minWidth: 100, textAlign: 'center' }}>
+                    {currentScale?.name} <br />
+                    <span style={{ color: 'red', fontSize: '1.5rem' }}>{currentTask.label}</span>
                 </div>
             </div>
 
-            {/* KEYBOARD DISPLAY - NEW */}
-            <div className="current-task-display" style={{ bottom: 0 }}>
-                <div style={{ marginBottom: 10, fontSize: '1.5rem', fontWeight: 'bold', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
-                    Nốt cần đánh: <span style={{ color: '#FFEB3B', fontSize: '2rem' }}>{currentTask.label}</span>
-                </div>
-
-                <div className="piano-scroll-container" style={{ height: 'auto', paddingBottom: 10 }}>
-                    <div className="piano-keyboard extended">
+            {/* KEYBOARD DISPLAY - NEW STYLED */}
+            <div className="forest-visual-keyboard">
+                <div className="piano-scroll-container" style={{ overflow: 'visible', height: '100%', alignItems: 'flex-end' }}>
+                    <div className="piano-keyboard extended" style={{ background: 'transparent', boxShadow: 'none' }}>
                         {pianoKeys.map((k, i) => {
-                            // LOGIC: Show Green Dot on ALL keys that match the Target Note Name
-                            // e.g. Target "C" -> Highlights C3, C4
+                            // SHOW BLUE DOTS FOR BOTH HANDS (Simulated by highlighting all matching octaves)
+                            // User requested "Blue dots" specifically.
                             const noteName = k.note.replace(/[0-9]/g, '');
-                            const isTarget = taskNotes.includes(noteName);
-                            // Highlight Detected Note with Blue or similar? No, user removed blue. Just Green for target.
+                            const targetNames = taskNotes.map(tn => tn.replace(/[0-9]/g, ''));
+                            const isTarget = targetNames.includes(noteName);
+
+                            // We use 'active-hint' style which is usually green/blue. Let's force a blue style if needed,
+                            // but usually the default hint style is good. User asked for "Green/Blue dots".
 
                             return (
                                 <KeyComponent
                                     key={`${k.note}-${i}`}
                                     k={k}
                                     index={i}
-                                    isCurrent={isTarget} // Green Dot
+                                    isCurrent={isTarget} // Shows the hint dot
                                     isFuture={false}
                                     finger={null}
                                     onPlay={() => { }} // Visual only
