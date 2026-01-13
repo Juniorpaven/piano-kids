@@ -1,51 +1,109 @@
-/* Full Screen Force Layout */
+/* =========================================
+   TRUE LANDSCAPE SUPPORT - PIANO KIDS
+   ========================================= */
+
+/* GLOBAL FONT */
+body,
+html,
+button,
+.app-main-menu {
+  font-family: 'Tahoma', sans-serif !important;
+  font-weight: bold;
+}
+
+/* 
+   BASE CONTAINER 
+   Default: Hidden/Warning if logic dictates, but we rely on Media Queries.
+*/
 .touch-game-fullscreen {
   position: fixed;
   top: 0;
-  bottom: 0;
   left: 0;
   right: 0;
-  /* Replaces width/height 100vw/dvh */
+  bottom: 0;
   background-color: #222;
-  z-index: 9999;
+  z-index: 1000;
+  /* High but below Warning */
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  /* Handle Notch - Landscape Mode */
-  padding-left: max(35px, env(safe-area-inset-left));
-  padding-right: max(35px, env(safe-area-inset-right));
-  padding-bottom: env(safe-area-inset-bottom);
   box-sizing: border-box;
 }
 
-/* ... existing code ... */
-
-.touch-game-container {
-  flex: 1;
-  display: flex;
+/* 
+   PORTRAIT WARNING OVERLAY
+   Using direct CSS Media Queries for robustness 
+*/
+.portrait-warning {
+  display: none !important;
+  /* Default hidden */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #212121;
+  z-index: 99999;
+  /* Highest priority */
+  color: white;
   flex-direction: column;
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-  position: relative;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
 }
 
-/* PIANO CONTAINER - Flex based for "Full Fit" */
-/* PIANO CONTAINER - Flex based for "Full Fit" */
+/* SHOW WARNING ONLY IN PORTRAIT */
+@media screen and (orientation: portrait) {
+  .portrait-warning {
+    display: flex !important;
+  }
+
+  /* Hide the game content behind it to prevent glitches */
+  .touch-game-container,
+  .forest-game-content,
+  .glass-panel,
+  .piano-scroll-container {
+    visibility: hidden;
+  }
+}
+
+/* 
+   LANDSCAPE LAYOUT (The Game)
+   Active when device is rotated.
+*/
+@media screen and (orientation: landscape) {
+  .touch-game-fullscreen {
+    width: 100vw;
+    height: 100dvh;
+    /* Use dynamic viewport height */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .touch-game-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    visibility: visible;
+  }
+}
+
+/* REMOVED: .forced-landscape class as we now rely on native rotation */
+
+/* PIANO CONTAINER */
 .piano-scroll-container {
   flex: 1;
-  /* Grow to fill remaining space */
   width: 100%;
-  /* Use 100% of parent, NOT 100vw which is wrong in rotated mode */
   min-height: 0;
   overflow: hidden;
   background: #111;
   display: flex;
   align-items: stretch;
-  /* Force children (keyboard) to fill height */
   position: relative;
-  padding-bottom: env(safe-area-inset-bottom);
-  /* Handle iPhone home bar */
 }
 
 /* Hide scrollbar */
@@ -56,17 +114,14 @@
 .piano-keyboard.extended {
   position: relative;
   height: 100%;
-  /* Fill container */
   width: 100%;
-  /* Use 100% of parent */
   margin: 0;
   padding: 0;
   background: transparent;
   display: flex;
-  /* Ensure keys are flex items if needed, or rely on absolute */
 }
 
-/* Base Key Style */
+/* KEY STYLES */
 .key {
   position: absolute;
   top: 0;
@@ -74,30 +129,27 @@
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
-  -webkit-user-select: none;
+  touch-action: none;
 }
 
-/* Glass Panel for HUD */
+/* HUD STYLES */
 .glass-panel {
   background: rgba(0, 0, 0, 0.4);
-  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding: 5px 15px;
-  /* Reduced padding */
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
   color: white;
   flex-shrink: 0;
-  box-sizing: border-box;
   width: 100%;
-  height: 70px;
-  /* Slightly taller to fit 2 lines info */
+  height: 60px;
+  /* Compact HUD */
 }
 
-/* COMPACTED STATUS BAR GRID */
+/* STATUS BAR */
 .status-bar.compacted {
   flex: 1;
   display: flex;
@@ -117,130 +169,63 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: #eee;
 }
 
-.title-row {
-  font-weight: bold;
-}
-
-.prompt-row {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 2px 10px;
-  border-radius: 12px;
-  font-size: 1rem;
-}
-
-/* VISUAL BOXES FOR PROMPTS */
 .next-note-target-box {
   background: white;
   color: #D32F2F;
-  /* Red color for Note Name */
   font-weight: 900;
   padding: 0 8px;
   border-radius: 4px;
   font-size: 1.2rem;
-  min-width: 20px;
+  min-width: 25px;
   text-align: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .finger-box {
   color: #FFF176;
-  /* Yellow for finger */
 }
 
-.finger-box strong {
-  font-size: 1.2rem;
-  color: #FFF176;
-}
-
-/* PROGRESS BAR TINY */
-.progress-track.tiny {
-  width: 60px;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.3);
-  margin-left: 10px;
-}
-
-/* Winning Msg */
-.win-message {
-  color: #4CAF50;
-  font-weight: bold;
-  font-size: 1.2rem;
-  animation: popIn 0.5s;
-}
-
-.btn-challenge-small {
-  margin-left: 10px;
-  background: #2196F3;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-/* ... Buttons ... */
+/* BUTTONS */
 .btn-demo {
-  height: 44px;
-  border-radius: 22px;
+  height: 40px;
+  border-radius: 20px;
   padding: 0 15px;
   background: #FF9800;
   color: white;
   font-weight: bold;
   border: none;
-  box-shadow: 0 4px 0 #E65100;
-  font-size: 0.85rem;
-  min-width: 60px;
+  box-shadow: 0 3px 0 #E65100;
+  font-size: 0.9rem;
 }
 
 .btn-menu-back {
-  /* Keep generic style but ensure it fits */
-  height: 44px;
-  min-width: 50px;
-  padding: 0;
-}
-
-/* REMOVED OLD PROMPTS */
-.prompt-area,
-.next-note-bubble,
-.finger-hint {
-  display: none !important;
-}
-
-@keyframes popIn {
-  from {
-    transform: scale(0);
-    opacity: 0;
-  }
-
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
+  height: 40px;
+  width: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
 }
 
 /* WHITE KEYS */
 .key.white {
   height: 100%;
   border: none;
-  /* Removed default borders */
   z-index: 10;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  /* Jelly styles handled inline for dynamic features */
 }
 
 .key.white.active-hint {
   filter: brightness(1.1);
   box-shadow: 0 0 15px #FFEB3B !important;
-}
-
-.key.white:active {
-  /* Animation handled inline */
 }
 
 /* BLACK KEYS */
@@ -250,17 +235,12 @@
   z-index: 20;
 }
 
-.key.black:active {
-  /* Animation handled inline */
-}
-
 /* DOTS */
 .key .dot {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
   width: 24px;
-  /* Smaller dots */
   height: 24px;
   border-radius: 50%;
   background: #4CAF50;
@@ -272,141 +252,88 @@
   align-items: center;
   z-index: 50;
   bottom: 20%;
-  /* Relative pos */
-  opacity: 0.5;
-}
-
-.key.black .dot {
-  bottom: 10%;
-  width: 20px;
-  height: 20px;
-  font-size: 0.8rem;
+  opacity: 0.8;
 }
 
 .key .dot.current {
   opacity: 1;
   background: #00E676;
-  box-shadow: 0 0 15px #00E676;
+  box-shadow: 0 0 10px #00E676;
   transform: translateX(-50%) scale(1.1);
-  animation: bounceDot 0.5s infinite alternate;
 }
 
-@keyframes bounceDot {
-  from {
-    transform: translateX(-50%) scale(1);
-  }
-
-  to {
-    transform: translateX(-50%) scale(1.2);
-  }
+.key.black .dot {
+  bottom: 10%;
+  width: 18px;
+  height: 18px;
+  font-size: 0.8rem;
 }
 
-.note-name {
-  pointer-events: none;
-  font-size: 0.9rem;
-  /* Smaller note names */
-}
-
-/* Rotation Enforcement - Adjusted */
-.forced-landscape {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  width: 100dvh !important;
-  /* Use dvh for mobile */
-  height: 100vw !important;
-  transform: translate(-50%, -50%) rotate(90deg);
-  transform-origin: center center;
-  z-index: 9999;
-  overflow: hidden;
-  background: #222;
-}
-
-/* New class for the note target text */
-.next-note-target {
-  color: #4CAF50;
-  font-size: 1.3rem;
-  /* Slightly smaller than original 1.5rem */
-  font-weight: bold;
-}
-
-/* Hide warning icon animation */
-.portrait-warning {
-  display: none;
-  /* Controlled by React now */
+/* REWARD POPUP */
+.sticker-popup-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: #212121;
-  /* Dark theme */
-  z-index: 10000;
-  color: white;
-  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 2000;
+  display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.popup-content-box {
+  background: white;
+  padding: 30px;
+  border-radius: 20px;
   text-align: center;
-  padding: 20px;
+  position: relative;
+  width: 80%;
+  max-width: 500px;
+  animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.portrait-warning .icon-spin {
-  font-size: 4rem;
-  margin-bottom: 20px;
-  animation: spinIcon 2s infinite ease-in-out;
-}
-
-@keyframes spinIcon {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  25% {
-    transform: rotate(-90deg);
-  }
-
-  100% {
-    transform: rotate(0deg);
-  }
-}
-
-.btn-force-rotate {
-  background: #FF5722;
+.btn-collect-reward {
+  background: #4CAF50;
   color: white;
   border: none;
   padding: 15px 30px;
-  font-size: 1.2rem;
-  font-weight: bold;
+  font-size: 1.5rem;
   border-radius: 50px;
-  margin-top: 20px;
-  box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4);
   cursor: pointer;
-  animation: pulse 1.5s infinite;
+  box-shadow: 0 5px 0 #2E7D32;
+  margin-top: 20px;
+  width: 100%;
 }
 
-@keyframes pulse {
-  0% {
+@keyframes popIn {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+
+  to {
     transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ANIMATIONS */
+.rotate-icon {
+  font-size: 4rem;
+  animation: rotatePhone 2s infinite ease-in-out;
+  margin-bottom: 20px;
+}
+
+@keyframes rotatePhone {
+
+  0%,
+  100% {
+    transform: rotate(0deg);
   }
 
   50% {
-    transform: scale(1.05);
+    transform: rotate(-90deg);
   }
-
-  100% {
-    transform: scale(1);
-  }
-}
-
-/* Active Pressed State (e.g. from Mic or Touch) */
-.key.white.active-pressed {
-  background: linear-gradient(to bottom, #fff 0%, #42A5F5 100%) !important;
-  box-shadow: inset 0px -5px 10px rgba(0, 0, 0, 0.2);
-  transform: translateY(2px) scale(0.98);
-}
-
-.key.black.active-pressed {
-  background: linear-gradient(to bottom, #444 0%, #1565C0 100%) !important;
-  box-shadow: inset 0px -2px 5px rgba(0, 0, 0, 0.5);
-  transform: translateY(2px) scale(0.98);
 }

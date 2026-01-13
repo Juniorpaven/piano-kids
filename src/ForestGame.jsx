@@ -332,19 +332,17 @@ function ForestGame({ onBack }) {
 
     // GAME SCREEN with Rotation Check
     return (
-        <div className={`touch-game-fullscreen ${isPortrait ? 'forced-landscape' : ''}`} style={{ background: '#4CAF50' }}>
+        <div className="touch-game-fullscreen" style={{ background: '#4CAF50' }}>
             {/* FORCE LANDSCAPE WRAPPER - Replaces forest-container as root */}
 
             {/* Preload / Confetti */}
             {gameState === 'WIN' && <Confetti recycle={false} numberOfPieces={500} gravity={0.1} />}
 
-            {/* Warning Overlay (reuse from CSS) */}
-            {(isPortrait && !forceRotate) && (
-                <div className="portrait-warning" style={{ display: 'flex', zIndex: 10001 }}>
-                    <div className="rotate-icon">📱➡️</div>
-                    <h2>Xoay ngang màn hình để chơi nhé!</h2>
-                </div>
-            )}
+            {/* Warning Overlay */}
+            <div className="portrait-warning">
+                <div className="rotate-icon">📱➡️</div>
+                <h2>Xoay ngang màn hình để chơi nhé!</h2>
+            </div>
 
             {/* Back Button */}
             <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 50 }}>

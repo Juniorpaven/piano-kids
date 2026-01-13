@@ -342,7 +342,7 @@ function TouchGame({ onBack }) {
     const progressPercent = Math.min(100, (stepIndex / gameSequence.length) * 100);
 
     return (
-        <div className={`touch-game-fullscreen ${forceRotate ? 'forced-landscape' : ''}`}>
+        <div className="touch-game-fullscreen">
             <div style={{ display: 'none' }}>{/* Preload Assets */}
                 <img src="/trophy.png" alt="" />
                 <img src="/stickers.png" alt="" />
@@ -402,16 +402,11 @@ function TouchGame({ onBack }) {
                     </div>
                 )}
 
-                {/* Warning Overlay */}
-                {(isPortrait && !forceRotate) && (
-                    <div className="portrait-warning" style={{ display: 'flex' }}>
-                        <div className="rotate-icon">📱➡️</div>
-                        <h2>Vui lòng xoay ngang điện thoại!</h2>
-                        <button className="btn-force-rotate" onClick={() => setForceRotate(true)}>
-                            🔄 Xoay Ngang Ngay
-                        </button>
-                    </div>
-                )}
+                {/* Warning Overlay (Now handled primarily by CSS) */}
+                <div className="portrait-warning">
+                    <div className="rotate-icon">📱➡️</div>
+                    <h2>Vui lòng xoay ngang điện thoại!</h2>
+                </div>
 
                 <div className="glass-panel">
                     <button className="btn-menu-back" onClick={() => setView('SELECTION')}>
