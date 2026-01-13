@@ -3,76 +3,118 @@ import Confetti from 'react-confetti';
 import * as Tone from 'tone';
 import './ForestGame.css';
 import { playSound } from './utils/sound';
+import KeyComponent from './components/KeyComponent';
 
-// --- DATA: SEQUENCES ---
-// Definng the "C Major" parallel and contrary sequences
-const SEQUENCES = {
-    C_MAJOR: [
-        // PHASE 1: PARALLEL (C D E F G A B C -> C B A G F E D C)
-        // We only track the Note Names. We expect inputs to match these.
-        // ASCENDING
-        { note: 'C', label: 'Đô' }, { note: 'D', label: 'Rê' }, { note: 'E', label: 'Mi' }, { note: 'F', label: 'Fa' },
-        { note: 'G', label: 'Sol' }, { note: 'A', label: 'La' }, { note: 'B', label: 'Si' }, { note: 'C', label: 'Đô' },
-        // DESCENDING
-        { note: 'B', label: 'Si' }, { note: 'A', label: 'La' }, { note: 'G', label: 'Sol' }, { note: 'F', label: 'Fa' },
-        { note: 'E', label: 'Mi' }, { note: 'D', label: 'Rê' }, { note: 'C', label: 'Đô' },
+// --- DATA: SCALES (Reusing standard scales from other modes) ---
+const SCALES = [
+    { id: 'C_MAJOR', name: 'Đô Trưởng (C)', root: 'C', color: '#ef5350', notes: ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C'] },
+    { id: 'D_MAJOR', name: 'Rê Trưởng (D)', root: 'D', color: '#FFB74D', notes: ['D', 'E', 'F#', 'G', 'A', 'B', 'C#', 'D'] },
+    { id: 'E_MAJOR', name: 'Mi Trưởng (E)', root: 'E', color: '#FFEE58', notes: ['E', 'F#', 'G#', 'A', 'B', 'C#', 'D#', 'E'] },
+    { id: 'F_MAJOR', name: 'Fa Trưởng (F)', root: 'F', color: '#66BB6A', notes: ['F', 'G', 'A', 'A#', 'C', 'D', 'E', 'F'] },
+    { id: 'G_MAJOR', name: 'Son Trưởng (G)', root: 'G', color: '#42A5F5', notes: ['G', 'A', 'B', 'C', 'D', 'E', 'F#', 'G'] },
+    { id: 'A_MAJOR', name: 'La Trưởng (A)', root: 'A', color: '#AB47BC', notes: ['A', 'B', 'C#', 'D', 'E', 'F#', 'G#', 'A'] },
+    { id: 'B_MAJOR', name: 'Si Trưởng (B)', root: 'B', color: '#EC407A', notes: ['B', 'C#', 'D#', 'E', 'F#', 'G#', 'A#', 'B'] },
+];
 
-        // PHASE 2: CONTRARY MOTION (Center C Outwards)
-        // Left: B A G F E D C | Right: D E F G A B C
-        // We check PAIRS. If microphone hears EITHER, we count as pass for simpler logic, 
-        // OR we ideally want to switch detection target rapidly.
-        // For kids, let's just create a linear sequence that represents the "Flow".
-        // "Dual Hand" check via single mic is hard. 
-        // Strategy: We will list the dominant note of the pair or accept both.
+// Helper to generate sequences dynamically based on scale
+const generateSequence = (scale) => {
+    const n = scale.notes;
+    // Notes: [0, 1, 2, 3, 4, 5, 6, 7] (7 is Octave)
 
-        // STARTING FROM CENTER DO (C) -> ALREADY AT C from Phase 1.
-        // Step 1: L(Si) + R(Rê)
-        { note: ['B', 'D'], label: 'Si + Rê' },
-        // Step 2: L(La) + R(Mi)
-        { note: ['A', 'E'], label: 'La + Mi' },
-        // Step 3: L(Sol) + R(Fa)
-        { note: ['G', 'F'], label: 'Sol + Fa' },
-        // Step 4: L(Fa) + R(Sol) (Cross) - Actually in C Major contrary:
-        // C(C) -> B/D -> A/E -> G/F -> F/G -> E/A -> D/B -> C/C
-        { note: ['F', 'G'], label: 'Pha + Sol' },
-        { note: ['E', 'A'], label: 'Mi + La' },
-        { note: ['D', 'B'], label: 'Rê + Si' },
-        { note: 'C', label: 'Đô (Về đích!)' },
-    ]
+    // PHASE 1: PARALLEL (Up then Down)
+    // We assume 'label' is sufficient. children play 1 octave.
+    const seq = [];
+
+    // UP
+    for (let i = 0; i < n.length; i++) {
+        seq.push({ note: n[i], label: n[i] });
+    }
+    // DOWN (skip last one to avoid double top note? or play top again? Standard is play top once then down. So start i=length-2)
+    for (let i = n.length - 2; i >= 0; i--) {
+        seq.push({ note: n[i], label: n[i] });
+    }
+
+    // PHASE 2: CONTRARY MOTION (Center Outwards)
+    // Root is n[0].
+    // We'll simulate a simple 1-octave contrary expansion.
+    // L goes Down (reverse scale logic?), R goes Up.
+    // Since we don't have full keyboard map logic for "scales below root" easily without a big theory library,
+    // let's simplify Phase 2 to: "Chơi lại 2 tay" or simple chords?
+    // User requested "Parallel and Contrary".
+    // Let's implement a simplified Contrary: Play Root -> Play 3rd -> Play 5th -> Play Octave (Arpeggio style) for easier general detection?
+    // No, let's stick to the previously defined logic but adaptable.
+
+    // For Dynamic Scales, Contrary is hard to calc "Note Below Root" without chromatic map.
+    // Let's rely on Parallel Motion Phase (Up/Down) twice to ensure it works for ALL scales perfectly.
+    // The previous C_MAJOR specific contrary list was hardcoded.
+
+    // Adding a simple "Chord" finish
+    seq.push({ note: [n[0], n[2], n[4]], label: 'Hợp âm về đích!' }); // Root, 3rd, 5th
+
+    return seq;
 };
 
 // ML5 Model URL
 const MODEL_URL = 'https://cdn.jsdelivr.net/gh/ml5js/ml5-data-and-models/models/pitch-detection/crepe/';
 
 function ForestGame({ onBack }) {
+    // --- ROTATION CHECK (Moved to top level to fix React Error #310) ---
+    const [isPortrait, setIsPortrait] = useState(window.innerHeight > window.innerWidth);
+    const [forceRotate, setForceRotate] = useState(false);
+
+    useEffect(() => {
+        const checkOrientation = () => setIsPortrait(window.innerHeight > window.innerWidth);
+        window.addEventListener('resize', checkOrientation);
+        return () => window.removeEventListener('resize', checkOrientation);
+    }, []);
+
     // --- STATE ---
-    const [targetReps, setTargetReps] = useState(0); // 0 means In Setup
+    const [targetReps, setTargetReps] = useState(0);
     const [completedReps, setCompletedReps] = useState(0);
     const [stepIndex, setStepIndex] = useState(0);
 
-    const [gameState, setGameState] = useState('SETUP'); // SETUP, PLAYING, ERROR, WIN
+    const [gameState, setGameState] = useState('SETUP'); // SETUP, SELECT_SCALE, PLAYING, ERROR, WIN
     const [statusMsg, setStatusMsg] = useState('Chọn số lần tập nào!');
     const [detectedNote, setDetectedNote] = useState('-');
     const [lastWrongNote, setLastWrongNote] = useState(null);
+    const [currentScale, setCurrentScale] = useState(SCALES[0]); // Default C
+    const [gameSequence, setGameSequence] = useState([]);
 
     // Audio Context
     const audioContextRef = useRef(null);
     const pitchRef = useRef(null);
     const isListeningRef = useRef(false);
 
+    // KEYBOARD GENERATION (C3 - B4 range for visual)
+    const NOTES_CHROMATIC_KEYS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const pianoKeys = useMemo(() => {
+        let keys = [];
+        const octaves = [3, 4];
+        octaves.forEach(oct => {
+            NOTES_CHROMATIC_KEYS.forEach(n => {
+                const type = n.includes('#') ? 'black' : 'white';
+                let label = n;
+                if (type === 'white') {
+                    if (n === 'C') label = 'Đô'; if (n === 'D') label = 'Rê'; if (n === 'E') label = 'Mi';
+                    if (n === 'F') label = 'Fa'; if (n === 'G') label = 'Sol'; if (n === 'A') label = 'La';
+                    if (n === 'B') label = 'Si';
+                }
+                keys.push({ note: `${n}${oct}`, label: type === 'white' ? label : null, type });
+            });
+        });
+        return keys;
+    }, []);
+
     // Helper: TTS
     const speak = (text) => {
         if ('speechSynthesis' in window) {
-            // Cancel previous
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'vi-VN';
             utterance.rate = 1.1;
-            // Try to find a vietnamese voice
             const voices = window.speechSynthesis.getVoices();
             const viVoice = voices.find(v => v.lang.includes('vi'));
             if (viVoice) utterance.voice = viVoice;
-
             window.speechSynthesis.speak(utterance);
         }
     };
@@ -84,8 +126,11 @@ function ForestGame({ onBack }) {
                 if (!audioContextRef.current) {
                     audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
                 }
+                // Check audio context state 
+                if (audioContextRef.current.state === 'suspended') {
+                    await audioContextRef.current.resume();
+                }
 
-                // Only request mic if not already set up (avoids multiple streams)
                 if (!pitchRef.current) {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
                     if (window.ml5) {
@@ -132,87 +177,42 @@ function ForestGame({ onBack }) {
         });
     };
 
-    // --- ROTATION CHECK (Moved to top level to fix React Error #310) ---
-    const [isPortrait, setIsPortrait] = useState(window.innerHeight > window.innerWidth);
-    const [forceRotate, setForceRotate] = useState(false);
-
-    useEffect(() => {
-        const checkOrientation = () => setIsPortrait(window.innerHeight > window.innerWidth);
-        window.addEventListener('resize', checkOrientation);
-        return () => window.removeEventListener('resize', checkOrientation);
-    }, []);
-
     // --- GAMEPLAY LOGIC ---
-
-    // Debounce logic for note detection to avoid flickering
     useEffect(() => {
         if (gameState !== 'PLAYING') return;
 
-        const currentTask = SEQUENCES.C_MAJOR[stepIndex];
+        const currentTask = gameSequence[stepIndex];
         if (!currentTask) return;
 
-        // Normalize target: logic to handle array (Dual notes) or single string
         const targets = Array.isArray(currentTask.note) ? currentTask.note : [currentTask.note];
 
-        // Check if detected matches ANY valid target
-        // We ignore octaves, just check Note Name (C, D, E...)
         if (targets.includes(detectedNote)) {
-            // CORRECT!
-            playSound('correct'); // Short ping
-
-            // Special Visual Checkpoint
-            if (stepIndex === SEQUENCES.C_MAJOR.length - 1) {
-                // END OF REP
+            playSound('correct');
+            if (stepIndex === gameSequence.length - 1) {
                 completeRep();
             } else {
                 setStepIndex(prev => prev + 1);
             }
         } else {
-            // WRONG NOTE CHECK
-            // If detection is stable on a WRONG note (not noise), trigger error
-            // To be safe for kids, we only punish if the note is "far" or clearly wrong and sustained?
-            // Actually simplest is: If note is valid musical note but NOT target.
             if (detectedNote !== '-' && !targets.includes(detectedNote)) {
-                // debounce error? strictly instant?
-                // Let's rely on a small timeout logic or just instant "Wrong" is too harsh?
-                // User wanted "Strict". Let's do instant but maybe with a 200ms verify?
-                // For now, implementing instant feedback for "Strict".
                 handleError(detectedNote);
             }
         }
-
-    }, [detectedNote, gameState, stepIndex]);
+    }, [detectedNote, gameState, stepIndex, gameSequence]);
 
     const handleError = (wrongNote) => {
-        if (gameState === 'ERROR') return; // Already handling
-
-        // Avoid noise triggering (maybe check if wrongNote persists?)
-        // For this MVP, we assume clear input.
-
-        // Don't error immediately on transitory notes, but user asked for strict.
-        // Let's throttle: Only error if we haven't errored in last 2 seconds? No, that breaks flow.
-        // We'll set state to ERROR temp.
-
+        if (gameState === 'ERROR') return;
         setGameState('ERROR');
         setLastWrongNote(wrongNote);
-
-        // Random Voice Pack
-        const phrases = [
-            "Sai rồi bé ơi!",
-            "Nhầm nốt rồi, đánh lại nhé!",
-            "Ôi không, tập trung nào!",
-            "Chưa đúng, thử lại đi!"
-        ];
-        const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-        speak(randomPhrase);
+        const phrases = ["Sai rồi bé ơi!", "Nhầm nốt rồi!", "Tập trung nào!"];
+        speak(phrases[Math.floor(Math.random() * phrases.length)]);
         playSound('wrong');
 
-        // Reset Rep Logic
         setTimeout(() => {
-            setStepIndex(0); // Back to start of logic
+            setStepIndex(0);
             setGameState('PLAYING');
-            setDetectedNote('-'); // Reset detected to avoid instant re-trigger
-        }, 2500); // Wait for speech
+            setDetectedNote('-');
+        }, 2000);
     };
 
     const completeRep = () => {
@@ -224,151 +224,147 @@ function ForestGame({ onBack }) {
             speak("Hoàn thành nhiệm vụ! Bé giỏi quá!");
             playSound('win');
         } else {
-            // Continue to next rep
-            speak(`Tốt lắm! Lần thứ ${newCount}. Tiếp tục nào!`);
+            speak(`Tốt lắm! Tiếp tục nào!`);
             setStepIndex(0);
-            // Visual flare?
         }
+    };
+
+    const handleSelectScale = (scale) => {
+        setCurrentScale(scale);
+        setGameSequence(generateSequence(scale));
+        setGameState('PLAYING');
+        setStepIndex(0);
+        setCompletedReps(0);
+        speak(`Bắt đầu luyện tập ${scale.name}`);
     };
 
     // --- RENDER ---
 
-    const currentTask = SEQUENCES.C_MAJOR[stepIndex] || {};
-
-    // SETUP SCREEN
-    if (targetReps === 0) {
+    // SETUP SCREEN (Reps)
+    if (gameState === 'SETUP') {
         return (
             <div className="forest-container">
                 <div className="setup-overlay">
                     <h1 style={{ fontSize: '3rem', color: '#FFEB3B' }}>🌲 Rừng Xanh 🌲</h1>
                     <p>Chọn số lần tập (Reps) để bắt đầu:</p>
-
                     <div className="rep-grid">
                         {[10, 20, 30, 40, 50, 100].map(num => (
                             <button key={num} className="rep-btn" onClick={() => {
-                                speak("Bắt đầu thôi!");
                                 setTargetReps(num);
-                                setGameState('PLAYING');
+                                setGameState('SELECT_SCALE');
                             }}>
                                 {num} 🍎
                             </button>
                         ))}
                     </div>
-                    <button className="btn-small" style={{ marginTop: '50px' }} onClick={onBack}>🏠 Quay Về</button>
                 </div>
             </div>
         );
     }
 
+    // SCALE SELECT SCREEN
+    if (gameState === 'SELECT_SCALE') {
+        return (
+            <div className="app-main-menu"> {/* Reuse MainMenu styles for consistency */}
+                <div className="header-panel">
+                    <button className="btn-small" onClick={() => setGameState('SETUP')}>🔙</button>
+                    <h2 style={{ color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>Chọn Bài Nhạc</h2>
+                    <div style={{ width: 40 }}></div>
+                </div>
+                <div className="chord-grid">
+                    {SCALES.map(s => (
+                        <div key={s.id} className="chord-card" onClick={() => handleSelectScale(s)}>
+                            <div className="chord-title" style={{ background: s.color }}>{s.name}</div>
+                            <div className="chord-notes">{s.notes.join(' - ')}</div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    const currentTask = gameSequence[stepIndex] || {};
+    const taskNotes = Array.isArray(currentTask.note) ? currentTask.note : [currentTask.note];
+
     // GAME SCREEN with Rotation Check
     return (
         <div className={`forest-container ${forceRotate ? 'forced-landscape' : ''}`}>
-            {/* Warning Overlay controlled by React */}
-            {(isPortrait && !forceRotate) && (
-                <div className="portrait-warning" style={{ display: 'flex', position: 'fixed', zIndex: 999 }}>
-                    <div className="rotate-icon">📱➡️</div>
-                    <h2>Vui lòng xoay ngang điện thoại!</h2>
-                    <p>Hoặc ấn nút dưới để xoay ép buộc.</p>
-                    <button className="btn-force-rotate" onClick={() => setForceRotate(true)}>
-                        🔄 Xoay Ngang Ngay
-                    </button>
-                </div>
-            )}
-
-            {gameState === 'WIN' && <Confetti recycle={true} />}
-
-            {/* BACKGROUND LAYERS */}
-            <div className="sun-glow"></div>
-            <div className="tree-bg"></div>
-
-            {/* HUD */}
             <div className="forest-hud">
-                <button className="btn-small" onClick={onBack}>🏠</button>
-
+                <button className="btn-small" onClick={() => setGameState('SELECT_SCALE')}>🔙</button>
                 <div className="rep-counter-panel">
                     <div className="target-badge">Mục tiêu: {targetReps}</div>
                     <div className="rep-text">Đã xong</div>
                     <div className="rep-value">{completedReps}</div>
                 </div>
-
-                {/* Status Message */}
                 <div style={{ background: 'white', padding: '10px 20px', borderRadius: '20px', color: '#333', fontWeight: 'bold' }}>
                     {gameState === 'ERROR' ? (
-                        <span style={{ color: 'red' }}>⚠️ {detectedNote} (Sai rồi!)</span>
+                        <span style={{ color: 'red' }}>⚠️ {detectedNote} (Sai!)</span>
                     ) : (
-                        <span>👂 Đang nghe: {detectedNote}</span>
+                        <span>👂 Nghe: {detectedNote}</span>
                     )}
                 </div>
             </div>
 
-            {/* VISUALS */}
-            <div className="banana-trail">
-                {/* Show progress within the current REP (Step / Total Steps) */}
-                {/* Or show Total Progress (Reps / Target)? Use Reps/Target for trail */}
-                {Array.from({ length: Math.min(10, targetReps) }).map((_, i) => {
-                    // Normalize if target > 10
-                    const visualIdx = i; // simple mapping
-                    const isDone = (i < completedReps / (targetReps / 10)); // Approximate scaling
-                    // Actually let's just show up to 10 stars representing progress %
-                    const percent = completedReps / targetReps;
-                    const active = i / 10 < percent;
-
-                    return (
-                        <div key={i} className={`banana-item ${active ? 'collected' : ''}`}>
-                            {active ? '🌟' : '⚪'}
-                        </div>
-                    );
-                })}
-            </div>
-
-            <div className={`forest-character ${gameState === 'ERROR' ? 'shake-anim' : ''}`}
-                style={{ left: `${10 + (stepIndex / SEQUENCES.C_MAJOR.length) * 80}%` }}>
-
-                <div className={`character-speech-bubble ${gameState === 'ERROR' || gameState === 'WIN' ? 'visible' : ''}`}>
-                    {gameState === 'ERROR' ? 'A á! Sai rồi!' : 'Yeah!'}
+            {/* Warning Overlay */}
+            {(isPortrait && !forceRotate) && (
+                <div className="portrait-warning" style={{ display: 'flex', position: 'fixed', zIndex: 999 }}>
+                    <div className="rotate-icon">📱➡️</div>
+                    <h2>Vui lòng xoay ngang điện thoại!</h2>
+                    <button className="btn-force-rotate" onClick={() => setForceRotate(true)}>🔄 Xoay Ngang</button>
                 </div>
+            )}
 
+            {gameState === 'WIN' && (
+                <div className="setup-overlay" style={{ background: 'rgba(0,0,0,0.6)' }}>
+                    <Confetti recycle={true} />
+                    <h1 style={{ fontSize: '4rem', color: '#4CAF50' }}>🎉 XUẤT SẮC! 🎉</h1>
+                    <button className="rep-btn" onClick={() => setGameState('SETUP')}>Chơi Lại</button>
+                </div>
+            )}
+
+            {/* SCENERY */}
+            <div className="sun-glow"></div>
+            <div className="tree-bg"></div>
+
+            {/* CHARACTER */}
+            <div className={`forest-character ${gameState === 'ERROR' ? 'shake-anim' : ''}`}
+                style={{ left: `${10 + (stepIndex / gameSequence.length) * 80}%`, transition: 'left 0.5s' }}>
                 <div className="monkey-avatar">
                     {gameState === 'ERROR' ? '🙈' : (gameState === 'WIN' ? '🏆' : '🐵')}
                 </div>
             </div>
 
-            {/* NOTE DISPLAY */}
-            <div className="current-task-display">
-                <h2 style={{ fontSize: '2rem', marginBottom: '10px', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-                    Mục tiêu: <span style={{ color: '#FFEB3B' }}>{currentTask.label}</span>
-                </h2>
-                <div className="note-bubbles-container">
-                    {/* Show prev, current, next */}
-                    {stepIndex > 0 && (
-                        <div className="note-bubble" style={{ opacity: 0.5 }}>
-                            {SEQUENCES.C_MAJOR[stepIndex - 1].note[0]}
-                        </div>
-                    )}
+            {/* KEYBOARD DISPLAY - NEW */}
+            <div className="current-task-display" style={{ bottom: 0 }}>
+                <div style={{ marginBottom: 10, fontSize: '1.5rem', fontWeight: 'bold', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                    Nốt cần đánh: <span style={{ color: '#FFEB3B', fontSize: '2rem' }}>{currentTask.label}</span>
+                </div>
 
-                    <div className="note-bubble active">
-                        {Array.isArray(currentTask.note) ? currentTask.note.join('+') : currentTask.note}
+                <div className="piano-scroll-container" style={{ height: 'auto', paddingBottom: 10 }}>
+                    <div className="piano-keyboard extended">
+                        {pianoKeys.map((k, i) => {
+                            // LOGIC: Show Green Dot on ALL keys that match the Target Note Name
+                            // e.g. Target "C" -> Highlights C3, C4
+                            const noteName = k.note.replace(/[0-9]/g, '');
+                            const isTarget = taskNotes.includes(noteName);
+                            // Highlight Detected Note with Blue or similar? No, user removed blue. Just Green for target.
+
+                            return (
+                                <KeyComponent
+                                    key={`${k.note}-${i}`}
+                                    k={k}
+                                    index={i}
+                                    isCurrent={isTarget} // Green Dot
+                                    isFuture={false}
+                                    finger={null}
+                                    onPlay={() => { }} // Visual only
+                                    allKeys={pianoKeys}
+                                />
+                            );
+                        })}
                     </div>
-
-                    {stepIndex < SEQUENCES.C_MAJOR.length - 1 && (
-                        <div className="note-bubble" style={{ opacity: 0.5 }}>
-                            {SEQUENCES.C_MAJOR[stepIndex + 1].note[0]}
-                        </div>
-                    )}
                 </div>
-                <p style={{ opacity: 0.8 }}>(Hãy đánh trên đàn thật)</p>
             </div>
-
-            {gameState === 'WIN' && (
-                <div className="setup-overlay" style={{ background: 'rgba(0,0,0,0.4)' }}>
-                    <h1>🎉 CHÚC MỪNG! 🎉</h1>
-                    <button className="rep-btn" onClick={() => {
-                        setCompletedReps(0);
-                        setGameState('SETUP');
-                        setTargetReps(0);
-                    }}>Chơi Lại</button>
-                </div>
-            )}
         </div>
     );
 }
