@@ -18,40 +18,52 @@ function App() {
     return <TouchGame onBack={() => setView('MENU')} />;
   }
 
-  if (view === 'FOREST') { // Added ForestGame rendering condition
+  if (view === 'FOREST') {
     return <ForestGame onBack={() => setView('MENU')} />;
   }
 
   return (
-    <div className="app-main-menu">
-      {/* LOGO */}
-      <div className="logo-container">
-        <h1 className="title-main">🎹 PIANO KIDS 🎵</h1>
-        <p className="subtitle-main">Học mà chơi - Chơi mà học</p>
+    <div className="app-home">
+      {/* BACKGROUND ACCENT */}
+      <div className="home-bg-glow"></div>
+
+      {/* HEADER */}
+      <div className="home-header">
+        <button className="icon-btn">🔒</button>
+        <button className="icon-btn">🔊</button>
       </div>
 
-      <div className="menu-grid">
-        <div className="menu-card card-touch" onClick={() => setView('TOUCH')}>
-          <div className="card-icon">👆</div>
-          <h2>Đảo Kẹo Ngọt</h2>
-          <p>Luyện ngón trên màn hình</p>
-        </div>
-
-        <div className="menu-card card-mic" onClick={() => setView('MIC')}>
-          <div className="card-icon">🎤</div>
-          <h2>Thám Hiểm (Mic)</h2>
-          <p>Dùng đàn thật - Cơ bản</p>
-        </div>
-
-        <div className="menu-card card-forest" onClick={() => setView('FOREST')} style={{ background: 'linear-gradient(135deg, #66BB6A 0%, #33691E 100%)' }}>
-          <div className="card-icon">🌲</div>
-          <h2>Rừng Xanh</h2>
-          <p>Luyện 2 tay (Nâng cao)</p>
+      {/* HERO SECTION */}
+      <div className="hero-container">
+        <h1 className="app-logo-text">Piano Kids!</h1>
+        <div className="hero-image-frame">
+          <img src="/home-cat.png" alt="Cute Cat Piano" className="hero-img" />
         </div>
       </div>
 
-      <div className="footer-info">
-        <p>Phiên bản 3.0 - Hỗ trợ bởi Gemini</p>
+      {/* JELLY PLAY BUTTON */}
+      <div className="play-btn-container">
+        <button className="btn-jelly-lg" onClick={() => setView('TOUCH')}>
+          ▶ PLAY
+        </button>
+      </div>
+
+      {/* FOOTER MENU */}
+      <div className="footer-menu">
+        <button className="menu-item" onClick={() => setView('MIC')}>
+          <div className="menu-icon-box">⭐</div>
+          <span>Fun</span>
+        </button>
+
+        <button className="menu-item active" onClick={() => setView('TOUCH')}>
+          <div className="menu-icon-box">🎹</div>
+          <span>Piano</span>
+        </button>
+
+        <button className="menu-item" onClick={() => setView('FOREST')}>
+          <div className="menu-icon-box">🏆</div>
+          <span>Wins</span>
+        </button>
       </div>
     </div>
   );

@@ -338,104 +338,128 @@ function TouchGame({ onBack }) {
                 </div>
             )}
 
-            <div className="glass-panel">
-                <button className="btn-menu-back" onClick={() => setView('SELECTION')}>
-                    <span style={{ fontSize: '1.5rem' }}>🏠</span>
-                </button>
+            {/* FALLING NOTES LAYER */}
+            {gameStatus === 'PLAYING' && (
+                <div className="falling-notes-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 5 }}>
+                    {/* Show simple visual beat for current note */}
+                    <div className="falling-note" style={{
+                        left: `${(stepIndex / gameSequence.length) * 80 + 10}%`,
+                        animationDuration: '2s'
+                    }}>
+                        🎵
+                    </div>
+                </div>
+            )}
 
-                {/* Combined Status & Prompt Area */}
-                <div className="status-bar compacted">
-                    {gameStatus === 'WIN' ? (
-                        <div className="win-message">🎉 HOÀN THÀNH +5 XU!</div>
-                    ) : (
+            <div className="touch-game-container">
+                {/* REWARD OVERLAY */}
+                {gameStatus === 'WIN' && (
+                    <div className="reward-overlay">
+                        <div className="trophy-container">
+                            <img src="/trophy.png" className="trophy-img" alt="Winner Trophy" />
+                        </div>
+                        <h1 style={{ color: '#FFEB3B', fontSize: '3rem', margin: '10px 0', textShadow: '0 4px 0 #F57F17' }}>YOU DID IT!</h1>
+
+                        <div className="sticker-collection">
+                            {/* Simple Logic: Unlock random sticker based on demo */}
+                            <div className="sticker-slot unlocked"><img src="/stickers.png" style={{ width: '100%', objectFit: 'cover', objectPosition: '0 0' }} /></div>
+                            <div className="sticker-slot unlocked"><img src="/stickers.png" style={{ width: '100%', objectFit: 'cover', objectPosition: '100% 0' }} /></div>
+                            <div className="sticker-slot"><span style={{ fontSize: '2rem' }}>🔒</span></div>
+                        </div>
+
+                        <button className="btn-jelly-lg" style={{ width: 250, marginTop: 30 }} onClick={() => { setStepIndex(0); setGameStatus('PLAYING'); setShowConfetti(false); }}>
+                            Collect & Replay!
+                        </button>
+                    </div>
+                )}
+
+                <div className="glass-panel">
+                    <button className="btn-menu-back" onClick={() => setView('SELECTION')}>
+                        <span style={{ fontSize: '1.5rem' }}>🏠</span>
+                    </button>
+
+                    {/* Combined Status & Prompt Area */}
+                    <div className="status-bar compacted">
                         <div className="info-grid">
                             <div className="info-row title-row">
-                                <span>Bài: {currentScale?.name}</span>
+                                <span style={{ fontSize: '1.5rem', color: 'white' }}>Bài: {currentScale?.name}</span>
                                 <div className="progress-track tiny">
                                     <div className="progress-fill" style={{ width: `${progressPercent}%` }}></div>
                                 </div>
                             </div>
 
-                            {/* NEXT NOTE INDICATOR - NOW IN HEADER */}
                             <div className="info-row prompt-row">
                                 {gameStatus === 'DEMO' ? (
                                     <span style={{ color: '#FF9800' }}>▶ Đang nghe mẫu... (nhìn nốt nhé)</span>
                                 ) : (
                                     <>
                                         <span>Tiếp theo:</span>
-                                        <span className="next-note-target-box">{currentTarget.note?.replace(/[0-9]/, '')}</span>
+                                        <span className="next-note-target-box" style={{ background: '#FFEB3B', color: '#333' }}>{currentTarget.note?.replace(/[0-9]/, '')}</span>
                                         <span className="finger-box">Ngón: <strong>{currentTarget.finger}</strong></span>
                                     </>
                                 )}
                             </div>
                         </div>
-                    )}
-                    {gameStatus === 'WIN' && (
-                        <button className="btn-challenge-small" onClick={() => { setStepIndex(0); setGameStatus('PLAYING'); setShowConfetti(false); }}>🔄 Chơi Lại</button>
-                    )}
+                    </div>
+
+                    <button className={`btn-demo ${gameStatus === 'DEMO' ? 'active' : ''}`} disabled={gameStatus === 'DEMO'} onClick={playDemo}>
+                        {gameStatus === 'DEMO' ? '⏹' : '▶ Nghe Mẫu'}
+                    </button>
                 </div>
 
-                <button className={`btn-demo ${gameStatus === 'DEMO' ? 'active' : ''}`} disabled={gameStatus === 'DEMO'} onClick={playDemo}>
-                    {gameStatus === 'DEMO' ? '⏹' : '▶ Mẫu'}
-                </button>
-            </div>
+                <div className="piano-scroll-container">
+                    <div className="piano-keyboard extended" style={{ background: 'transparent' }}>
+                        {/* Keys rendered here */}
+                        {pianoKeys.map((k, i) => {
+                            let fingerToDisplay = null;
+                            let isCurrent = false;
+                            let isFuture = false;
 
-            {/* Prompt Area Removed to save space */}
-
-            <div className="piano-scroll-container">
-                <div className="piano-keyboard extended">
-                    {/* Render Loading State if samples aren't ready? Optional, but good UX. For now, keys appear but maybe no sound immediately */}
-                    {pianoKeys.map((k, i) => {
-                        let fingerToDisplay = null;
-                        let isCurrent = false;
-                        let isFuture = false;
-
-                        // LOGIC: DEMO MODE (Use demoIndex)
-                        if (gameStatus === 'DEMO') {
-                            const target = gameSequence[demoIndex];
-                            // 1. Current Note
-                            if (target && k.note === target.note) {
-                                isCurrent = true;
-                                fingerToDisplay = target.finger;
-                            }
-                            // 2. Future Notes (Roadmap) - RESTORED
-                            else {
-                                const futureStep = gameSequence.slice(demoIndex + 1).find(item => item.note === k.note);
-                                if (futureStep) {
-                                    isFuture = true;
-                                    fingerToDisplay = futureStep.finger;
+                            // LOGIC: DEMO MODE (Use demoIndex)
+                            if (gameStatus === 'DEMO') {
+                                const target = gameSequence[demoIndex];
+                                if (target && k.note === target.note) {
+                                    isCurrent = true;
+                                    fingerToDisplay = target.finger;
+                                }
+                                else {
+                                    const futureStep = gameSequence.slice(demoIndex + 1).find(item => item.note === k.note);
+                                    if (futureStep) {
+                                        isFuture = true;
+                                        fingerToDisplay = futureStep.finger;
+                                    }
                                 }
                             }
-                        }
-                        // LOGIC: PLAYING MODE (Use stepIndex)
-                        else if (gameStatus === 'PLAYING') {
-                            const target = gameSequence[stepIndex];
-                            if (target && k.note === target.note) {
-                                isCurrent = true;
-                                fingerToDisplay = target.finger;
-                            }
-                            else {
-                                const futureStep = gameSequence.slice(stepIndex + 1).find(item => item.note === k.note);
-                                if (futureStep) {
-                                    isFuture = true;
-                                    fingerToDisplay = futureStep.finger;
+                            // LOGIC: PLAYING MODE (Use stepIndex)
+                            else if (gameStatus === 'PLAYING') {
+                                const target = gameSequence[stepIndex];
+                                if (target && k.note === target.note) {
+                                    isCurrent = true;
+                                    fingerToDisplay = target.finger;
+                                }
+                                else {
+                                    const futureStep = gameSequence.slice(stepIndex + 1).find(item => item.note === k.note);
+                                    if (futureStep) {
+                                        isFuture = true;
+                                        fingerToDisplay = futureStep.finger;
+                                    }
                                 }
                             }
-                        }
 
-                        return (
-                            <KeyComponent
-                                key={`${k.note}-${i}`}
-                                k={k}
-                                index={i}
-                                isCurrent={isCurrent}
-                                isFuture={isFuture}
-                                finger={fingerToDisplay}
-                                onPlay={handleNotePlay}
-                                allKeys={pianoKeys}
-                            />
-                        );
-                    })}
+                            return (
+                                <KeyComponent
+                                    key={`${k.note}-${i}`}
+                                    k={k}
+                                    index={i}
+                                    isCurrent={isCurrent}
+                                    isFuture={isFuture}
+                                    finger={fingerToDisplay}
+                                    onPlay={handleNotePlay}
+                                    allKeys={pianoKeys}
+                                />
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
         </div>
