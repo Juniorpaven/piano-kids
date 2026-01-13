@@ -1,21 +1,359 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="vi">
 
 <head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/png" href="/favicon.png" />
+  <meta charset="UTF-8">
+  <title>Piano Kids - Hotfix V3</title>
+  <!-- PREVENT SCALING / ZOOMING ON MOBILE -->
   <meta name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="manifest" href="/manifest.json">
-  <title>Piano Kids - Vui Học Piano</title>
-  <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+  <!-- Tone.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+  <style>
+    /* === 1. GLOBAL RESET === */
+    * {
+      box-sizing: border-box;
+      touch-action: none;
+      /* Disable double-tap zoom etc */
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100svh;
+      /* Safari fix */
+      background-color: #222;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    /* === 2. PORTRAIT WARNING (DEFAULT: HIDDEN) === */
+    #portrait-warning {
+      display: none;
+      /* Hidden by default */
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100svh;
+      background: #FFD54F;
+      z-index: 99999;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    /* SHOW WARNING ONLY ON PORTRAIT ORIENTATION */
+    @media screen and (orientation: portrait) {
+      #portrait-warning {
+        display: flex !important;
+      }
+
+      #game-container {
+        display: none !important;
+      }
+    }
+
+    /* === 3. GAME CONTAINER (FULLSCREEN LANDSCAPE) === */
+    #game-container {
+      display: flex;
+      flex-direction: column;
+      width: 100vw;
+      height: 100svh;
+      background: linear-gradient(to bottom, #81D4FA, #E1F5FE);
+    }
+
+    /* HEADER */
+    header {
+      height: 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      background: rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(5px);
+    }
+
+    .score-board {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #E91E63;
+      background: white;
+      padding: 5px 15px;
+      border-radius: 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* PIANO AREA - FLEXBOX LAYOUT (NO GRID) */
+    #piano-area {
+      flex: 1;
+      /* Fill remaining vertical space */
+      position: relative;
+      display: flex;
+      /* White keys horizontal */
+      padding: 0;
+      margin: 0;
+    }
+
+    /* WHITE KEYS */
+    .white-key {
+      flex: 1;
+      /* Distribute width equally (7 keys) */
+      height: 100%;
+      background: #FFF;
+      border: 1px solid #ccc;
+      /* Subtle separator */
+      border-top: none;
+      border-radius: 0 0 10px 10px;
+      position: relative;
+      /* For sticker placement */
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      padding-bottom: 20px;
+      box-shadow: inset 0 -10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .white-key:active,
+    .white-key.active {
+      background: #E0E0E0;
+      transform: scale(0.98);
+    }
+
+    .sticker {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      pointer-events: none;
+    }
+
+    .note-label {
+      font-weight: bold;
+      color: #555;
+      font-size: 1.2rem;
+      pointer-events: none;
+    }
+
+    /* BLACK KEYS - ABSOLUTE POSITIONING */
+    /* Width approx 60% of white key. White Key is 100/7 = ~14.28% */
+    /* Black key width = ~8-9% */
+    .black-key {
+      position: absolute;
+      top: 0;
+      height: 60%;
+      width: 8%;
+      background: linear-gradient(#333, #000);
+      border-radius: 0 0 8px 8px;
+      z-index: 20;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+      pointer-events: auto;
+      /* Ensure clickable */
+    }
+
+    .black-key:active,
+    .black-key.active {
+      background: #222;
+      transform: scale(0.95);
+    }
+
+    /* POSITIONS CALCULATED (14.28% per white key) */
+    /* C# between 1st(0%) and 2nd(14.28%) -> ~10% center */
+    .bk-0 {
+      left: 10%;
+    }
+
+    /* C# */
+    .bk-1 {
+      left: 24%;
+    }
+
+    /* D# */
+    /* Gap E-F */
+    .bk-2 {
+      left: 53%;
+    }
+
+    /* F# */
+    .bk-3 {
+      left: 67%;
+    }
+
+    /* G# */
+    .bk-4 {
+      left: 81.5%;
+    }
+
+    /* A# */
+
+    /* PARTICLES */
+    .particle {
+      position: absolute;
+      font-size: 24px;
+      pointer-events: none;
+      animation: floatUp 1s forwards;
+      z-index: 100;
+    }
+
+    @keyframes floatUp {
+      to {
+        transform: translateY(-100px);
+        opacity: 0;
+      }
+    }
+
+    /* ROTATION ANIMATION */
+    @keyframes rotateIcon {
+
+      0%,
+      100% {
+        transform: rotate(0deg);
+      }
+
+      25% {
+        transform: rotate(-90deg);
+      }
+    }
+
+    .rotate-icon {
+      font-size: 4rem;
+      animation: rotateIcon 2s infinite;
+    }
+  </style>
 </head>
 
 <body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.jsx"></script>
+
+  <!-- SCREEN 1: PORTRAIT WARNING -->
+  <div id="portrait-warning">
+    <div class="rotate-icon">📱</div>
+    <h1 style="color: #E65100;">Xoay Ngang Điện Thoại</h1>
+    <p>Để chơi đàn Piano nhé!</p>
+  </div>
+
+  <!-- SCREEN 2: GAME -->
+  <div id="game-container">
+    <header>
+      <div class="score-board">🍬 <span id="candy-val">0</span></div>
+      <div style="font-weight:bold; color: #0277BD; font-size: 1.2rem;">Piano Kids 🎵</div>
+    </header>
+
+    <div id="piano-area">
+      <!-- WHITE KEYS (7) -->
+      <!-- C4 -->
+      <div class="white-key" data-note="C4" ontouchstart="play(this, 'C4')">
+        <div class="sticker">🐱</div>
+        <div class="note-label">Do</div>
+      </div>
+      <!-- D4 -->
+      <div class="white-key" data-note="D4" ontouchstart="play(this, 'D4')">
+        <div class="sticker">🐶</div>
+        <div class="note-label">Re</div>
+      </div>
+      <!-- E4 -->
+      <div class="white-key" data-note="E4" ontouchstart="play(this, 'E4')">
+        <div class="sticker">🐭</div>
+        <div class="note-label">Mi</div>
+      </div>
+      <!-- F4 -->
+      <div class="white-key" data-note="F4" ontouchstart="play(this, 'F4')">
+        <div class="sticker">🐸</div>
+        <div class="note-label">Fa</div>
+      </div>
+      <!-- G4 -->
+      <div class="white-key" data-note="G4" ontouchstart="play(this, 'G4')">
+        <div class="sticker">🐯</div>
+        <div class="note-label">Sol</div>
+      </div>
+      <!-- A4 -->
+      <div class="white-key" data-note="A4" ontouchstart="play(this, 'A4')">
+        <div class="sticker">🦆</div>
+        <div class="note-label">La</div>
+      </div>
+      <!-- B4 -->
+      <div class="white-key" data-note="B4" ontouchstart="play(this, 'B4')">
+        <div class="sticker">🐻</div>
+        <div class="note-label">Si</div>
+      </div>
+
+      <!-- BLACK KEYS (5) -->
+      <div class="black-key bk-0" ontouchstart="play(this, 'C#4')"></div>
+      <div class="black-key bk-1" ontouchstart="play(this, 'D#4')"></div>
+      <div class="black-key bk-2" ontouchstart="play(this, 'F#4')"></div>
+      <div class="black-key bk-3" ontouchstart="play(this, 'G#4')"></div>
+      <div class="black-key bk-4" ontouchstart="play(this, 'A#4')"></div>
+    </div>
+  </div>
+
+  <script>
+    // === AUDIO ENGINE ===
+    let synth;
+    let candy = 0;
+    let isStarted = false;
+
+    async function initAudio() {
+      if (isStarted) return;
+      await Tone.start();
+      synth = new Tone.PolySynth(Tone.Synth).toDestination();
+      isStarted = true;
+      console.log("Audio Started");
+    }
+
+    // === PLAY LOGIC ===
+    function play(el, note) {
+      // Init audio context on first touch if needed
+      if (!isStarted) initAudio();
+
+      // Visual active state
+      el.classList.add('active');
+
+      // Audio Play
+      if (synth) {
+        synth.triggerAttackRelease(note, "8n");
+      }
+
+      // GameFi
+      spawnParticle(el);
+
+      // Release visual after short delay
+      setTimeout(() => {
+        el.classList.remove('active');
+      }, 200);
+    }
+
+    function spawnParticle(el) {
+      const rect = el.getBoundingClientRect();
+      const p = document.createElement('div');
+      p.innerText = '⭐';
+      p.className = 'particle';
+      // Center particle on clicked element
+      p.style.left = (rect.left + rect.width / 2 - 10) + 'px';
+      p.style.top = (rect.top - 20) + 'px';
+      document.body.appendChild(p);
+
+      // Candy logic (simple count)
+      candy++;
+      document.getElementById('candy-val').innerText = candy;
+
+      setTimeout(() => p.remove(), 1000);
+    }
+
+    // Prevent Context Menu
+    document.addEventListener('contextmenu', event => event.preventDefault());
+
+    // Handle Resize / Orientation
+    window.addEventListener('resize', () => {
+      // CSS handles Media Query, but we can log dimensions
+      console.log(window.innerWidth, window.innerHeight);
+    });
+  </script>
 </body>
 
 </html>
